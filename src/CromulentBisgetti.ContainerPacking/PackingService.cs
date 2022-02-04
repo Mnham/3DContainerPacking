@@ -22,12 +22,24 @@ namespace CromulentBisgetti.ContainerPacking
         /// <param name="algorithmTypeID">The algorithm type ID.</param>
         /// <returns>An instance of a packing algorithm implementing AlgorithmBase.</returns>
         /// <exception cref="System.Exception">Invalid algorithm type.</exception>
-        public static IPackingAlgorithm GetPackingAlgorithmFromTypeID(int algorithmTypeID)
+        public static IPackingAlgorithm GetPackingAlgorithmFromTypeID(AlgorithmType type)
         {
-            switch (algorithmTypeID)
+            switch (type)
             {
-                case (int)AlgorithmType.EB_AFIT:
+                case AlgorithmType.EB_AFIT:
                     return new EB_AFIT();
+
+                case AlgorithmType.EB_AFIT_improved:
+                    return new EB_AFIT_improved();
+
+                case AlgorithmType.XYZRotationVertical:
+                    return new XYZRotationVertical();
+
+                case AlgorithmType.ZRotation:
+                    return new ZRotation();
+
+                case AlgorithmType.WithoutRotation:
+                    return new WithoutRotation();
 
                 default:
                     throw new Exception("Invalid algorithm type.");
@@ -55,7 +67,7 @@ namespace CromulentBisgetti.ContainerPacking
 
                 Parallel.ForEach(algorithmTypeIDs, algorithmTypeID =>
                 {
-                    IPackingAlgorithm algorithm = GetPackingAlgorithmFromTypeID(algorithmTypeID);
+                    IPackingAlgorithm algorithm = GetPackingAlgorithmFromTypeID((AlgorithmType)algorithmTypeID);
 
                     // Until I rewrite the algorithm with no side effects, we need to clone the item list
                     // so the parallel updates don't interfere with each other.
