@@ -4,9 +4,10 @@ namespace CromulentBisgetti.DemoApp.Controllers
 {
     public class HomeController : Controller
     {
-        public IActionResult Index()
-        {
-            return View();
-        }
+        #region Public Methods
+
+        public IActionResult Index() => View();
+
+        #endregion Public Methods
     }
 }

@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
-using CromulentBisgetti.ContainerPacking;
+﻿using CromulentBisgetti.ContainerPacking;
 using CromulentBisgetti.ContainerPacking.Entities;
 using CromulentBisgetti.DemoApp.Models;
+
 using Microsoft.AspNetCore.Mvc;
+
+using System.Collections.Generic;
 
 namespace CromulentBisgetti.DemoApp.Controllers
 {
@@ -10,11 +12,13 @@ namespace CromulentBisgetti.DemoApp.Controllers
     [ApiController]
     public class ContainerPackingController : ControllerBase
     {
+        #region Public Methods
+
         // POST api/values
         [HttpPost]
-        public ActionResult<List<ContainerPackingResult>> Post([FromBody]ContainerPackingRequest request)
-        {
-            return PackingService.Pack(request.Containers, request.ItemsToPack, request.AlgorithmTypeIDs);
-        }
+        public ActionResult<List<ContainerPackingResult>> Post([FromBody] ContainerPackingRequest request) =>
+            PackingService.Pack(request.Containers, request.ItemsToPack, request.AlgorithmTypeIDs);
+
+        #endregion Public Methods
     }
 }

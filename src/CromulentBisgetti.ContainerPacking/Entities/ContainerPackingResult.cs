@@ -1,41 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Runtime.Serialization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CromulentBisgetti.ContainerPacking.Entities
 {
-	/// <summary>
-	/// The container packing result.
-	/// </summary>
-	[DataContract]
-	public class ContainerPackingResult
-	{
-		#region Constructors
+    /// <summary>
+    /// The container packing result.
+    /// </summary>
+    [DataContract]
+    public sealed class ContainerPackingResult
+    {
+        #region Public Properties
 
-		public ContainerPackingResult()
-		{
-			this.AlgorithmPackingResults = new List<AlgorithmPackingResult>();
-		}
+        [DataMember]
+        public List<AlgorithmPackingResult> AlgorithmPackingResults { get; set; } = new List<AlgorithmPackingResult>();
 
-		#endregion Constructors
+        /// <summary>
+        /// Gets or sets the container ID.
+        /// </summary>
+        /// <value>
+        /// The container ID.
+        /// </value>
+        [DataMember]
+        public int ContainerID { get; set; }
 
-		#region Public Properties
-
-		/// <summary>
-		/// Gets or sets the container ID.
-		/// </summary>
-		/// <value>
-		/// The container ID.
-		/// </value>
-		[DataMember]
-		public int ContainerID { get; set; }
-
-		[DataMember]
-		public List<AlgorithmPackingResult> AlgorithmPackingResults { get; set; }
-
-		#endregion Public Properties
-	}
+        #endregion Public Properties
+    }
 }
