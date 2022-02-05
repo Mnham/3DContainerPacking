@@ -1,4 +1,4 @@
-﻿@{ 
+﻿@{
     Layout = null;
 }
 
@@ -53,29 +53,26 @@
     <script src="js/vendor/orbit-controls.js"></script>
     <script src="js/container-packing.js"></script>
 </head>
-<body style="margin-bottom: 100px;">
+<body>
     <div id="content" class="container">
-        <h3>3D Container Packing</h3>
         <div class="row">
             <div class="col-xs-4">
                 <div class="panel panel-default">
                     <div class="panel-heading">
-                        <h3 class="panel-title">Packing Algorithms</h3>
+                        <h3 class="panel-title">Алгоритмы упаковки</h3>
                     </div>
                     <div class="panel-body">
                         <table class="table table-condensed" style="font-size: 14px;">
                             <thead>
                                 <tr>
                                     <th class="button-column"></th>
-                                    <th class="algorithm-name-column">Algorithms to Use</th>
-                                    <th></th>
+                                    <th class="algorithm-name-column">Используемые алгоритмы</th>
                                 </tr>
                             </thead>
                             <tbody data-bind="foreach: AlgorithmsToUse">
                                 <tr>
                                     <td class="button-column"><button class="btn btn-danger btn-sm" data-bind="click: $root.RemoveAlgorithmToUse">&nbsp;<span class="glyphicon glyphicon-remove"></span>&nbsp;</button></td>
                                     <td class="algorithm-name-column"><p class="form-control-static" data-bind="text: AlgorithmName"></p></td>
-                                    <td></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -86,14 +83,13 @@
                                 <td class="button-column"><button class="btn btn-success btn-sm" data-bind="click: AddAlgorithmToUse">&nbsp;<span class="glyphicon glyphicon-plus"></span>&nbsp;</button></td>
                                 <td class="algorithm-name-column">
                                     <select id="algorithm-select" class="form-control">
-                                        <option value="1">EB-AFIT</option>
+                                        <option value="1">EB_AFIT</option>
                                         <option value="2">EB_AFIT_improved</option>
                                         <option value="3">XYZRotationVertical</option>
                                         <option value="4">ZRotation</option>
                                         <option value="5">WithoutRotation</option>
                                     </select>
                                 </td>
-                                <td></td>
                             </tr>
                         </table>
                     </div>
@@ -102,8 +98,8 @@
             <div class="col-xs-8">
                 <div class="panel panel-default">
                     <div class="panel-heading">
-                        <h3 class="panel-title pull-left">Items to Pack</h3>
-                        <div class="pull-right"><button class="btn btn-default btn-sm" data-bind="click: GenerateItemsToPack">Generate</button></div>
+                        <h3 class="panel-title pull-left">Предметы для упаковки</h3>
+                        <div class="pull-right"><button class="btn btn-default btn-sm" data-bind="click: GenerateItemsToPack">Сгенерировать предметы для примера</button></div>
                         <div class="clearfix"></div>
                     </div>
                     <div class="panel-body">
@@ -111,39 +107,25 @@
                             <thead>
                                 <tr>
                                     <th class="button-column"></th>
-                                    <th class="text-column">Name</th>
-                                    <th class="data-column text-center">L</th>
-                                    <th class="data-column text-center">W</th>
-                                    <th class="data-column text-center">H</th>
-                                    <th class="data-column text-center">Qty</th>
-                                    <th></th>
+                                    <th class="data-column text-center">Длина</th>
+                                    <th class="data-column text-center">Ширина</th>
+                                    <th class="data-column text-center">Высота</th>
+                                    <th class="data-column text-center">Количество</th>
                                 </tr>
                             </thead>
                             <tbody data-bind="foreach: ItemsToPack">
                                 <tr>
                                     <td class="button-column"><button class="btn btn-danger btn-sm" data-bind="click: $root.RemoveItemToPack">&nbsp;<span class="glyphicon glyphicon-remove"></span>&nbsp;</button></td>
-                                    <td class="text-column"><input type="text" class="form-control input-sm" data-bind="value: Name" /></td>
                                     <td class="data-column text-center"><input type="text" class="form-control input-sm text-center" data-bind="value: Length" /></td>
                                     <td class="data-column text-center"><input type="text" class="form-control input-sm text-center" data-bind="value: Width" /></td>
                                     <td class="data-column text-center"><input type="text" class="form-control input-sm text-center" data-bind="value: Height" /></td>
                                     <td class="data-column text-center"><input type="text" class="form-control input-sm text-center" data-bind="value: Quantity" /></td>
-                                    <td></td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                     <div class="panel-footer">
-                        <table class="table table-condensed borderless" style="font-size: 14px;">
-                            <tr>
-                                <td class="button-column"><button class="btn btn-success btn-sm" data-bind="click: AddNewItemToPack">&nbsp;<span class="glyphicon glyphicon-plus"></span>&nbsp;</button></td>
-                                <td class="text-column"><input type="text" class="form-control input-sm" data-bind="value: NewItemToPack.Name" /></td>
-                                <td class="data-column text-center"><input type="text" class="form-control input-sm text-center" data-bind="value: NewItemToPack.Length" /></td>
-                                <td class="data-column text-center"><input type="text" class="form-control input-sm text-center" data-bind="value: NewItemToPack.Width" /></td>
-                                <td class="data-column text-center"><input type="text" class="form-control input-sm text-center" data-bind="value: NewItemToPack.Height" /></td>
-                                <td class="data-column text-center"><input type="text" class="form-control input-sm text-center" data-bind="value: NewItemToPack.Quantity" /></td>
-                                <td></td>
-                            </tr>
-                        </table>
+                        <button class="btn btn-success btn-sm" data-bind="click: AddNewItemToPack">&nbsp;<span class="glyphicon glyphicon-plus"></span>&nbsp;</button>
                     </div>
                 </div>
             </div>
@@ -152,10 +134,10 @@
             <div class="col-xs-12">
                 <div class="panel panel-default">
                     <div class="panel-heading">
-                        <h3 class="panel-title pull-left">Containers</h3>
+                        <h3 class="panel-title pull-left">Контейнеры</h3>
                         <div class="pull-right">
-                            <button class="btn btn-default btn-sm" data-bind="click: GenerateContainers">Generate</button>
-                            <button class="btn btn-primary btn-sm" data-bind="click: PackContainers">Pack Em Up</button>
+                            <button class="btn btn-default btn-sm" data-bind="click: GenerateContainers">Сгенерировать контейнеры для примера</button>
+                            <button class="btn btn-primary btn-sm" data-bind="click: PackContainers">УПАКОВАТЬ</button>
                         </div>
                         <div class="clearfix"></div>
                     </div>
@@ -164,23 +146,21 @@
                             <thead>
                                 <tr>
                                     <th class="button-column"></th>
-                                    <th class="text-column">Name</th>
-                                    <th class="data-column text-center">L</th>
-                                    <th class="data-column text-center">W</th>
-                                    <th class="data-column text-center">H</th>
+                                    <th class="data-column text-center">Длина</th>
+                                    <th class="data-column text-center">Ширина</th>
+                                    <th class="data-column text-center">Высота</th>
                                     <th class="button-column gray-cell"></th>
-                                    <th class="algorithm-name-column">Algorithm<br />Name</th>
-                                    <th class="data-column text-center">Pack Time<br />(ms)</th>
-                                    <th class="data-column text-center"><div data-toggle="tooltip" title="% of container volume packed with items">% Cont.<br />Used</div></th>
-                                    <th class="data-column text-center"># Items<br />Packed</th>
-                                    <th class="data-column text-center"># Items<br />Unpacked</th>
+                                    <th class="algorithm-name-column">Алгоритм</th>
+                                    <th class="data-column text-center">Время (мс)</th>
+                                    <th class="data-column text-center">Заполненный объем %</th>
+                                    <th class="data-column text-center">Упаковано</th>
+                                    <th class="data-column text-center">Не упаковано</th>
                                     <th></th>
                                 </tr>
                             </thead>
                             <tbody data-bind="foreach: Containers">
                                 <tr>
                                     <td class="button-column"><button class="btn btn-danger btn-sm" data-bind="click: $root.RemoveContainer">&nbsp;<span class="glyphicon glyphicon-remove"></span>&nbsp;</button></td>
-                                    <td class="text-column"><input type="text" class="form-control input-sm" data-bind="value: Name" /></td>
                                     <td class="data-column text-center"><input type="text" class="form-control input-sm text-center" data-bind="value: Length" /></td>
                                     <td class="data-column text-center"><input type="text" class="form-control input-sm text-center" data-bind="value: Width" /></td>
                                     <td class="data-column text-center"><input type="text" class="form-control input-sm text-center" data-bind="value: Height" /></td>
@@ -232,32 +212,22 @@
                         </table>
                     </div>
                     <div class="panel-footer">
-                        <table class="table table-condensed borderless" style="font-size: 14px;">
-                            <tr>
-                                <td class="button-column"><button class="btn btn-success btn-sm" data-bind="click: AddNewContainer">&nbsp;<span class="glyphicon glyphicon-plus"></span>&nbsp;</button></td>
-                                <td class="text-column"><input type="text" class="form-control input-sm" data-bind="value: NewContainer.Name" /></td>
-                                <td class="data-column text-center"><input type="text" class="form-control input-sm text-center" data-bind="value: NewContainer.Length" /></td>
-                                <td class="data-column text-center"><input type="text" class="form-control input-sm text-center" data-bind="value: NewContainer.Width" /></td>
-                                <td class="data-column text-center"><input type="text" class="form-control input-sm text-center" data-bind="value: NewContainer.Height" /></td>
-                                <td></td>
-                            </tr>
-                        </table>
+                        <button class="btn btn-success btn-sm" data-bind="click: AddNewContainer">&nbsp;<span class="glyphicon glyphicon-plus"></span>&nbsp;</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="modal fade render-modal" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content" style="margin-bottom: 30px;">
-                <div id="drawing-container" style="margin-top: 30px; text-align: center;"></div>
-                <div class="text-center">
-                    <button class="btn btn-default" data-bind="click: UnpackItemInRender, enable: AreItemsPacked()"><span class="glyphicon glyphicon-chevron-left"></span></button>
-                    <button class="btn btn-default" data-bind="click: PackItemInRender, disable: AreAllItemsPacked()"><span class="glyphicon glyphicon-chevron-right"></span></button>
-                </div>
+    <div class="modal fade render-modal" align="center" tabindex="-1">
+        <div class="modal-content">
+            <div id="drawing-container"></div>
+            <div class="text-center">
+                <button class="btn btn-default" data-bind="click: UnpackItemInRender, enable: AreItemsPacked()"><span class="glyphicon glyphicon-chevron-left"></span></button>
+                <button class="btn btn-default" data-bind="click: PackItemInRender, disable: AreAllItemsPacked()"><span class="glyphicon glyphicon-chevron-right"></span></button>
             </div>
         </div>
     </div>
+
 </body>
 </html>
