@@ -35,8 +35,8 @@ export function renderItems() {
     `).join('');
 }
 
-function renderAlgorithmResultRows(containerIndex, container, fieldRenderer) {
-    return (container.AlgorithmPackingResults ?? []).map((result, resultIndex) => fieldRenderer(result, resultIndex, containerIndex)).join('');
+function renderAlgorithmResultRows(container, fieldRenderer) {
+    return (container.AlgorithmPackingResults ?? []).map((result, resultIndex) => fieldRenderer(result, resultIndex)).join('');
 }
 
 function resultCountCell(count, result) {
@@ -55,22 +55,22 @@ export function renderContainers() {
             ${inputCell('container', containerIndex, 'Height', container.Height)}
             <td class="button-column gray-cell"></td>
             <td class="algorithm-name-column">
-                <table aria-label="Алгоритмы для контейнера ${containerIndex + 1}"><tbody>${renderAlgorithmResultRows(containerIndex, container, result => `<tr><td><p class="form-control-plaintext mb-0">${escapeHtml(result.AlgorithmName)}</p></td></tr>`)}</tbody></table>
+                <table aria-label="Алгоритмы для контейнера ${containerIndex + 1}"><tbody>${renderAlgorithmResultRows(container, result => `<tr><td><p class="form-control-plaintext mb-0">${escapeHtml(result.AlgorithmName)}</p></td></tr>`)}</tbody></table>
             </td>
             <td class="data-column text-center">
-                <table class="mx-auto" aria-label="Время упаковки контейнера ${containerIndex + 1}"><tbody>${renderAlgorithmResultRows(containerIndex, container, result => `<tr><td><p class="form-control-plaintext mb-0">${escapeHtml(result.PackTimeInMilliseconds)}</p></td></tr>`)}</tbody></table>
+                <table class="mx-auto" aria-label="Время упаковки контейнера ${containerIndex + 1}"><tbody>${renderAlgorithmResultRows(container, result => `<tr><td><p class="form-control-plaintext mb-0">${escapeHtml(result.PackTimeInMilliseconds)}</p></td></tr>`)}</tbody></table>
             </td>
             <td class="data-column text-center">
-                <table class="mx-auto" aria-label="Процент заполнения контейнера ${containerIndex + 1}"><tbody>${renderAlgorithmResultRows(containerIndex, container, result => `<tr><td><p class="form-control-plaintext mb-0">${escapeHtml(result.PercentContainerVolumePacked)}</p></td></tr>`)}</tbody></table>
+                <table class="mx-auto" aria-label="Процент заполнения контейнера ${containerIndex + 1}"><tbody>${renderAlgorithmResultRows(container, result => `<tr><td><p class="form-control-plaintext mb-0">${escapeHtml(result.PercentContainerVolumePacked)}</p></td></tr>`)}</tbody></table>
             </td>
             <td class="data-column">
-                <table class="w-100" aria-label="Количество упакованных предметов для контейнера ${containerIndex + 1}"><tbody>${renderAlgorithmResultRows(containerIndex, container, result => resultCountCell(result.PackedItems?.length ?? 0, result))}</tbody></table>
+                <table class="w-100" aria-label="Количество упакованных предметов для контейнера ${containerIndex + 1}"><tbody>${renderAlgorithmResultRows(container, result => resultCountCell(result.PackedItems?.length ?? 0, result))}</tbody></table>
             </td>
             <td class="data-column">
-                <table class="w-100" aria-label="Количество неупакованных предметов для контейнера ${containerIndex + 1}"><tbody>${renderAlgorithmResultRows(containerIndex, container, result => resultCountCell(result.UnpackedItems?.length ?? 0, result))}</tbody></table>
+                <table class="w-100" aria-label="Количество неупакованных предметов для контейнера ${containerIndex + 1}"><tbody>${renderAlgorithmResultRows(container, result => resultCountCell(result.UnpackedItems?.length ?? 0, result))}</tbody></table>
             </td>
             <td class="data-column text-end">
-                <table class="ms-auto" aria-label="Визуализация упаковки контейнера ${containerIndex + 1}"><tbody>${renderAlgorithmResultRows(containerIndex, container, (_result, resultIndex) => `
+                <table class="ms-auto" aria-label="Визуализация упаковки контейнера ${containerIndex + 1}"><tbody>${renderAlgorithmResultRows(container, (_result, resultIndex) => `
                     <tr><td><button type="button" class="btn btn-link btn-sm" data-show-packing-view data-container-index="${containerIndex}" data-result-index="${resultIndex}" aria-label="Показать визуализацию контейнера ${containerIndex + 1}, результат ${resultIndex + 1}">Показать</button></td></tr>
                 `)}</tbody></table>
             </td>

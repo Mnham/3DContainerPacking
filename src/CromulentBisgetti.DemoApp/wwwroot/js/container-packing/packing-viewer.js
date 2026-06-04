@@ -15,17 +15,17 @@ let animationLoopRunning = false;
 const viewerState = {
     itemsToRender: [],
     lastItemRenderedIndex: -1,
-    containerOriginOffset: { x: 0, y: 0, z: 0 }
+    containerOriginOffset: { x: 0, y: 0, z: 0 },
+    selectedPackingView: null
 };
 
-async function ensureDrawingInitialized() {
+function ensureDrawingInitialized() {
     if (drawingInitialized) {
         return;
     }
 
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(50, 1, 0.1, 10000);
-    camera.lookAt(scene.position);
 
     const light = new THREE.PointLight(0xffffff);
     light.position.set(0, 150, 100);
@@ -125,13 +125,12 @@ function createContainerFrame(container) {
 
     const material = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 2 });
     const wireframe = new THREE.LineSegments(edgesGeometry, material);
-    wireframe.position.set(0, 0, 0);
 
     return wireframe;
 }
 
-async function showPackingView(containerIndex, resultIndex) {
-    await ensureDrawingInitialized();
+function showPackingView(containerIndex, resultIndex) {
+    ensureDrawingInitialized();
 
     const container = state.containers[containerIndex];
     const algorithmPackingResult = container.AlgorithmPackingResults[resultIndex];
@@ -154,7 +153,7 @@ async function showPackingView(containerIndex, resultIndex) {
 }
 
 export function openPackingView(containerIndex, resultIndex) {
-    state.selectedPackingView = { containerIndex, resultIndex };
+    viewerState.selectedPackingView = { containerIndex, resultIndex };
     elements.drawingContainer.style.visibility = 'hidden';
     elements.packRenderItemButton.disabled = true;
     elements.unpackRenderItemButton.disabled = true;
@@ -163,12 +162,12 @@ export function openPackingView(containerIndex, resultIndex) {
 }
 
 export async function renderSelectedPackingView() {
-    if (!state.selectedPackingView) {
+    if (!viewerState.selectedPackingView) {
         return;
     }
 
-    const { containerIndex, resultIndex } = state.selectedPackingView;
-    await showPackingView(containerIndex, resultIndex);
+    const { containerIndex, resultIndex } = viewerState.selectedPackingView;
+    showPackingView(containerIndex, resultIndex);
 
     await new Promise(resolve => requestAnimationFrame(resolve));
     resizeDrawing();
@@ -205,6 +204,7 @@ export function closePackingView() {
     renderedObjectsGroup = undefined;
     viewerState.itemsToRender = [];
     viewerState.lastItemRenderedIndex = -1;
+    viewerState.selectedPackingView = null;
 }
 
 export function packItemInRender() {

@@ -26,17 +26,13 @@ function parsePositiveNumber(value) {
     return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 }
 
-function addFieldError(errors, entity, index, field, message) {
-    errors.push({ entity, index, field, message });
-}
-
 function validatePositiveField(errors, entity, rowLabel, index, field, value, requireInteger = false) {
     const parsed = parsePositiveNumber(value);
     const isValid = parsed !== null && (!requireInteger || Number.isInteger(parsed));
 
     if (!isValid) {
         const expectedValue = requireInteger ? 'целым числом больше 0' : 'числом больше 0';
-        addFieldError(errors, entity, index, field, `${rowLabel}: поле "${fieldLabels[field]}" должно быть ${expectedValue}.`);
+        errors.push({ entity, index, field, message: `${rowLabel}: поле "${fieldLabels[field]}" должно быть ${expectedValue}.` });
         return null;
     }
 

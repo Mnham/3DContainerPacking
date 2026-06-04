@@ -29,8 +29,3 @@
 .gray-cell {
     background-color: #ececec;
 }
-
-.validation-summary:focus {
-    outline: 2px solid var(--bs-danger);
-    outline-offset: 2px;
-}

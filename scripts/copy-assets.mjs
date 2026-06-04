@@ -5,31 +5,30 @@ import { fileURLToPath } from 'node:url';
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const demoAppRoot = path.join(repoRoot, 'src', 'CromulentBisgetti.DemoApp');
 
+const asset = (from, to = from) => ({ from, to });
+const stripSourceMapReference = content => content
+  .replace(/\n?\/\*# sourceMappingURL=.*? \*\/\s*$/u, '')
+  .replace(/\n?\/\/# sourceMappingURL=.*?\s*$/u, '');
+
 const assets = [
   {
-    from: ['node_modules', 'bootstrap', 'dist', 'css', 'bootstrap.min.css'],
-    to: ['wwwroot', 'lib', 'bootstrap', 'css', 'bootstrap.min.css']
+    ...asset(
+      ['node_modules', 'bootstrap', 'dist', 'css', 'bootstrap.min.css'],
+      ['wwwroot', 'lib', 'bootstrap', 'css', 'bootstrap.min.css']),
+    transform: stripSourceMapReference
   },
   {
-    from: ['node_modules', 'bootstrap', 'dist', 'css', 'bootstrap.min.css.map'],
-    to: ['wwwroot', 'lib', 'bootstrap', 'css', 'bootstrap.min.css.map']
+    ...asset(
+      ['node_modules', 'bootstrap', 'dist', 'js', 'bootstrap.bundle.min.js'],
+      ['wwwroot', 'lib', 'bootstrap', 'js', 'bootstrap.bundle.min.js']),
+    transform: stripSourceMapReference
   },
-  {
-    from: ['node_modules', 'bootstrap', 'dist', 'js', 'bootstrap.bundle.min.js'],
-    to: ['wwwroot', 'lib', 'bootstrap', 'js', 'bootstrap.bundle.min.js']
-  },
-  {
-    from: ['node_modules', 'bootstrap', 'dist', 'js', 'bootstrap.bundle.min.js.map'],
-    to: ['wwwroot', 'lib', 'bootstrap', 'js', 'bootstrap.bundle.min.js.map']
-  },
-  {
-    from: ['node_modules', 'three', 'build', 'three.module.js'],
-    to: ['wwwroot', 'lib', 'three', 'build', 'three.module.js']
-  },
-  {
-    from: ['node_modules', 'three', 'build', 'three.core.js'],
-    to: ['wwwroot', 'lib', 'three', 'build', 'three.core.js']
-  },
+  asset(
+    ['node_modules', 'three', 'build', 'three.module.js'],
+    ['wwwroot', 'lib', 'three', 'build', 'three.module.js']),
+  asset(
+    ['node_modules', 'three', 'build', 'three.core.js'],
+    ['wwwroot', 'lib', 'three', 'build', 'three.core.js']),
   {
     from: ['node_modules', 'three', 'examples', 'jsm', 'controls', 'OrbitControls.js'],
     to: ['wwwroot', 'lib', 'three', 'examples', 'jsm', 'controls', 'OrbitControls.js'],
