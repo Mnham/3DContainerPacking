@@ -1,5 +1,20 @@
 ## `EB_AFIT_improved`
 
+## Локальный запуск demo-приложения
+
+Перед первым запуском установите фронтенд-зависимости, чтобы Bootstrap и Three.js были скопированы в `wwwroot/lib`:
+
+```powershell
+npm install
+dotnet run --project src/CromulentBisgetti.DemoApp/CromulentBisgetti.DemoApp.csproj
+```
+
+После изменения версий `bootstrap` или `three` можно обновить локальные ассеты без переустановки пакетов:
+
+```powershell
+npm run prepare-assets
+```
+
 ### Доработанный алгоритм, в нем решена пролема упаковки слоя в глубину, когда оставшееся свободное пространство не используется.
 
 Предметы:

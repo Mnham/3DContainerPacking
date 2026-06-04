@@ -1,0 +1,36 @@
+#drawing-container {
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+#drawing-container canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+#content table {
+    font-size: 14px;
+}
+
+.button-column {
+    width: 60px;
+}
+
+.data-column {
+    width: 80px;
+}
+
+.algorithm-name-column {
+    width: 180px;
+}
+
+.gray-cell {
+    background-color: #ececec;
+}
+
+.validation-summary:focus {
+    outline: 2px solid var(--bs-danger);
+    outline-offset: 2px;
+}

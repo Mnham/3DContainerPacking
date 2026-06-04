@@ -1,18 +1,27 @@
 @model ErrorViewModel
 
 @{
-    ViewData["Title"] = "Error";
+    ViewData["Title"] = "Ошибка";
 }
 
 <div class="container py-5">
-    <h1 class="text-danger">Error</h1>
-    <p class="lead">An error occurred while processing your request.</p>
+    <div class="card border-danger">
+        <div class="card-body">
+            <h1 class="h4 text-danger">Что-то пошло не так</h1>
+            <p class="lead mb-3">Локальное демо не смогло обработать запрос.</p>
+            <p class="mb-0">
+                Попробуйте обновить страницу или перезапустить приложение командой
+                <code>dotnet run --project src/CromulentBisgetti.DemoApp/CromulentBisgetti.DemoApp.csproj</code>.
+            </p>
 
-    @if (Model.ShowRequestId)
-    {
-        <p>
-            <strong>Request ID:</strong>
-            <code>@Model.RequestId</code>
-        </p>
-    }
+            @if (Model.ShowRequestId)
+            {
+                <hr />
+                <p class="small text-body-secondary mb-0">
+                    <strong>Request ID:</strong>
+                    <code>@Model.RequestId</code>
+                </p>
+            }
+        </div>
+    </div>
 </div>

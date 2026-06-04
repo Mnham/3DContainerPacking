@@ -1,12 +1,5 @@
 ﻿var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.Configure<CookiePolicyOptions>(options =>
-{
-    // This lambda determines whether user consent for non-essential cookies is needed for a given request.
-    options.CheckConsentNeeded = _ => true;
-    options.MinimumSameSitePolicy = SameSiteMode.None;
-});
-
 builder.Services.AddControllersWithViews()
     .AddJsonOptions(options =>
     {
@@ -28,7 +21,6 @@ else
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-app.UseCookiePolicy();
 
 app.UseRouting();
 

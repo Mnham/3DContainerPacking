@@ -1,46 +1,9 @@
 ﻿@{
-    ViewData["Title"] = "Container Packing";
+    ViewData["Title"] = "Упаковка контейнеров";
 }
 
 @section Styles {
-    <style>
-        #drawing-container {
-            width: 100%;
-            flex: 1 1 auto;
-            min-height: 0;
-        }
-
-        #drawing-container canvas {
-            display: block;
-            width: 100% !important;
-            height: 100% !important;
-        }
-
-        table {
-            font-size: 14px;
-        }
-
-        .borderless td,
-        .borderless th {
-            border: none !important;
-        }
-
-        .button-column {
-            width: 60px;
-        }
-
-        .data-column {
-            width: 80px;
-        }
-
-        .algorithm-name-column {
-            width: 180px;
-        }
-
-        .gray-cell {
-            background-color: #ececec;
-        }
-    </style>
+    <link href="~/css/container-packing.css" rel="stylesheet" asp-append-version="true" />
 }
 
 <div id="content" class="container py-4">
@@ -53,10 +16,11 @@
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-sm align-middle">
+                            <caption class="visually-hidden">Выбранные алгоритмы упаковки</caption>
                             <thead>
                                 <tr>
-                                    <th class="button-column"></th>
-                                    <th class="algorithm-name-column">Используемые алгоритмы</th>
+                                    <th class="button-column" scope="col" aria-label="Действия"></th>
+                                    <th class="algorithm-name-column" scope="col">Используемые алгоритмы</th>
                                 </tr>
                             </thead>
                             <tbody id="algorithms-to-use"></tbody>
@@ -66,10 +30,11 @@
                 <div class="card-footer">
                     <div class="row g-2 align-items-center">
                         <div class="col-auto">
-                            <button id="add-algorithm" class="btn btn-success btn-sm" aria-label="Добавить алгоритм">+</button>
+                            <button id="add-algorithm" type="button" class="btn btn-success btn-sm" aria-label="Добавить алгоритм">+</button>
                         </div>
                         <div class="col">
-                            <select id="algorithm-select" class="form-select form-select-sm">
+                            <label class="visually-hidden" for="algorithm-select">Алгоритм для добавления</label>
+                            <select id="algorithm-select" class="form-select form-select-sm" aria-label="Алгоритм для добавления">
                                 <option value="1">EB_AFIT</option>
                                 <option value="2">EB_AFIT_improved</option>
                                 <option value="3">XYZRotationVertical</option>
@@ -86,18 +51,19 @@
             <div class="card h-100">
                 <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
                     <h2 class="h5 mb-0">Предметы для упаковки</h2>
-                    <button id="generate-items" class="btn btn-outline-secondary btn-sm">Сгенерировать предметы для примера</button>
+                    <button id="generate-items" type="button" class="btn btn-outline-secondary btn-sm">Сгенерировать предметы для примера</button>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-sm align-middle">
+                            <caption class="visually-hidden">Предметы, которые нужно упаковать</caption>
                             <thead>
                                 <tr>
-                                    <th class="button-column"></th>
-                                    <th class="data-column text-center">Длина</th>
-                                    <th class="data-column text-center">Ширина</th>
-                                    <th class="data-column text-center">Высота</th>
-                                    <th class="data-column text-center">Количество</th>
+                                    <th class="button-column" scope="col" aria-label="Действия"></th>
+                                    <th class="data-column text-center" scope="col">Длина</th>
+                                    <th class="data-column text-center" scope="col">Ширина</th>
+                                    <th class="data-column text-center" scope="col">Высота</th>
+                                    <th class="data-column text-center" scope="col">Количество</th>
                                 </tr>
                             </thead>
                             <tbody id="items-to-pack"></tbody>
@@ -105,7 +71,7 @@
                     </div>
                 </div>
                 <div class="card-footer">
-                    <button id="add-item" class="btn btn-success btn-sm" aria-label="Добавить предмет">+</button>
+                    <button id="add-item" type="button" class="btn btn-success btn-sm" aria-label="Добавить предмет">+</button>
                 </div>
             </div>
         </div>
@@ -117,26 +83,27 @@
                 <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
                     <h2 class="h5 mb-0">Контейнеры</h2>
                     <div class="d-flex flex-wrap gap-2">
-                        <button id="generate-containers" class="btn btn-outline-secondary btn-sm">Сгенерировать контейнеры для примера</button>
-                        <button id="pack-containers" class="btn btn-primary btn-sm">УПАКОВАТЬ</button>
+                        <button id="generate-containers" type="button" class="btn btn-outline-secondary btn-sm">Сгенерировать контейнеры для примера</button>
+                        <button id="pack-containers" type="button" class="btn btn-primary btn-sm">Упаковать</button>
                     </div>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-sm align-middle">
+                            <caption class="visually-hidden">Контейнеры и результаты упаковки</caption>
                             <thead>
                                 <tr>
-                                    <th class="button-column"></th>
-                                    <th class="data-column text-center">Длина</th>
-                                    <th class="data-column text-center">Ширина</th>
-                                    <th class="data-column text-center">Высота</th>
-                                    <th class="button-column gray-cell"></th>
-                                    <th class="algorithm-name-column">Алгоритм</th>
-                                    <th class="data-column text-center">Время (мс)</th>
-                                    <th class="data-column text-center">Заполненный объем %</th>
-                                    <th class="data-column text-center">Упаковано</th>
-                                    <th class="data-column text-center">Не упаковано</th>
-                                    <th></th>
+                                    <th class="button-column" scope="col" aria-label="Действия"></th>
+                                    <th class="data-column text-center" scope="col">Длина</th>
+                                    <th class="data-column text-center" scope="col">Ширина</th>
+                                    <th class="data-column text-center" scope="col">Высота</th>
+                                    <th class="button-column gray-cell" scope="col" aria-label="Разделитель"></th>
+                                    <th class="algorithm-name-column" scope="col">Алгоритм</th>
+                                    <th class="data-column text-center" scope="col">Время (мс)</th>
+                                    <th class="data-column text-center" scope="col">Заполненный объём, %</th>
+                                    <th class="data-column text-center" scope="col">Упаковано</th>
+                                    <th class="data-column text-center" scope="col">Не упаковано</th>
+                                    <th scope="col" aria-label="Визуализация"></th>
                                 </tr>
                             </thead>
                             <tbody id="containers"></tbody>
@@ -144,7 +111,7 @@
                     </div>
                 </div>
                 <div class="card-footer">
-                    <button id="add-container" class="btn btn-success btn-sm" aria-label="Добавить контейнер">+</button>
+                    <button id="add-container" type="button" class="btn btn-success btn-sm" aria-label="Добавить контейнер">+</button>
                 </div>
             </div>
         </div>
@@ -161,8 +128,8 @@
             <div class="modal-body d-flex flex-column text-center p-2">
                 <div id="drawing-container"></div>
                 <div class="mt-2">
-                    <button id="unpack-render-item" class="btn btn-outline-secondary" disabled>Назад</button>
-                    <button id="pack-render-item" class="btn btn-outline-secondary" disabled>Вперёд</button>
+                    <button id="unpack-render-item" type="button" class="btn btn-outline-secondary" disabled>Назад</button>
+                    <button id="pack-render-item" type="button" class="btn btn-outline-secondary" disabled>Вперёд</button>
                 </div>
             </div>
         </div>

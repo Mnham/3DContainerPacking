@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "scripts": {
+    "prepare-assets": "node scripts/copy-assets.mjs",
+    "postinstall": "npm run prepare-assets"
+  },
+  "dependencies": {
+    "bootstrap": "5.3.8",
+    "three": "0.184.0"
+  }
+}
