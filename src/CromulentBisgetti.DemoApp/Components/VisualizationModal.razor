@@ -75,7 +75,6 @@
 
     private static IReadOnlyList<PackingVisualizationItem> CreateVisualizationItems(IEnumerable<Item>? items) =>
         items?.Select(item => new PackingVisualizationItem(
-            item.ID,
             item.CoordX,
             item.CoordY,
             item.CoordZ,

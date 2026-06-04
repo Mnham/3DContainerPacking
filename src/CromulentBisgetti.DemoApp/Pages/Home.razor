@@ -1,38 +1,404 @@
 @page "/"
-@implements IDisposable
-@inject PackingFormState State
+@using CromulentBisgetti.ContainerPacking
 
 <PageTitle>Упаковка контейнеров</PageTitle>
 
 <div class="packing-form container py-4">
-    <EditForm EditContext="State.EditContext">
+    <EditForm EditContext="editContext">
+        <div class="d-flex flex-wrap gap-2 justify-content-end mb-3">
+            <button type="button" class="btn btn-outline-secondary btn-sm" disabled="@isPacking" @onclick="GenerateDemoData">Заполнить демо-данными</button>
+            <button type="button" class="btn btn-outline-danger btn-sm" disabled="@isPacking" @onclick="ClearAll">Очистить всё</button>
+        </div>
+
         <div class="row g-3">
             <div class="col-12">
-                <ItemsPanel />
+                <div class="card h-100">
+                    <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
+                        <h2 class="h5 mb-0">Предметы для упаковки</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle">
+                                <caption class="visually-hidden">Предметы, которые нужно упаковать</caption>
+                                <thead>
+                                    <tr>
+                                        <th class="button-column" scope="col" aria-label="Действия"></th>
+                                        <th class="data-column text-center" scope="col">Длина</th>
+                                        <th class="data-column text-center" scope="col">Ширина</th>
+                                        <th class="data-column text-center" scope="col">Высота</th>
+                                        <th class="data-column text-center" scope="col">Количество</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (int index = 0; index < items.Count; index++)
+                                    {
+                                        int itemIndex = index;
+                                        PackingItemFormModel item = items[itemIndex];
+                                        string rowLabel = $"Предмет {itemIndex + 1}";
+
+                                        <tr @key="item.Id">
+                                            <td>
+                                                <button type="button" class="btn btn-outline-danger btn-sm" disabled="@isPacking" aria-label="Удалить предмет @(itemIndex + 1)" @onclick="() => RemoveItem(itemIndex)">-</button>
+                                            </td>
+                                            <td>
+                                                <InputNumber min="1" step="any" inputmode="decimal" class="form-control form-control-sm text-center" disabled="@isPacking" @bind-Value="item.Length" aria-label="@($"{rowLabel}: Длина")" aria-invalid="@GetAriaInvalid(item, nameof(PackingItemFormModel.Length))" title="@GetFieldError(item, nameof(PackingItemFormModel.Length))" />
+                                                <ValidationMessage For="@(() => item.Length)" class="invalid-feedback" />
+                                            </td>
+                                            <td>
+                                                <InputNumber min="1" step="any" inputmode="decimal" class="form-control form-control-sm text-center" disabled="@isPacking" @bind-Value="item.Width" aria-label="@($"{rowLabel}: Ширина")" aria-invalid="@GetAriaInvalid(item, nameof(PackingItemFormModel.Width))" title="@GetFieldError(item, nameof(PackingItemFormModel.Width))" />
+                                                <ValidationMessage For="@(() => item.Width)" class="invalid-feedback" />
+                                            </td>
+                                            <td>
+                                                <InputNumber min="1" step="any" inputmode="decimal" class="form-control form-control-sm text-center" disabled="@isPacking" @bind-Value="item.Height" aria-label="@($"{rowLabel}: Высота")" aria-invalid="@GetAriaInvalid(item, nameof(PackingItemFormModel.Height))" title="@GetFieldError(item, nameof(PackingItemFormModel.Height))" />
+                                                <ValidationMessage For="@(() => item.Height)" class="invalid-feedback" />
+                                            </td>
+                                            <td>
+                                                <InputNumber min="1" step="1" inputmode="numeric" class="form-control form-control-sm text-center" disabled="@isPacking" @bind-Value="item.Quantity" aria-label="@($"{rowLabel}: Количество")" aria-invalid="@GetAriaInvalid(item, nameof(PackingItemFormModel.Quantity))" title="@GetFieldError(item, nameof(PackingItemFormModel.Quantity))" />
+                                                <ValidationMessage For="@(() => item.Quantity)" class="invalid-feedback" />
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button type="button" class="btn btn-success btn-sm" disabled="@isPacking" aria-label="Добавить предмет" @onclick="AddItem">+</button>
+                    </div>
+                </div>
             </div>
         </div>
 
         <div class="row g-3 mt-1">
             <div class="col-12">
-                <ContainersPanel />
+                <div class="card" aria-busy="@isPacking">
+                    <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
+                        <h2 class="h5 mb-0">Контейнеры</h2>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button type="button" class="btn btn-primary btn-sm" disabled="@isPacking" @onclick="PackContainersAsync">
+                                @(isPacking ? "Упаковка..." : "Упаковать")
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        @if (isPacking)
+                        {
+                            <div class="alert alert-info d-flex align-items-center gap-2" role="status" aria-live="polite">
+                                <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                                <span>Выполняется упаковка. Входные данные временно заблокированы.</span>
+                            </div>
+                        }
+
+                        @if (packingErrors.Count > 0)
+                        {
+                            <div class="alert alert-danger" role="alert">
+                                <p class="fw-semibold mb-1">Не удалось выполнить упаковку:</p>
+                                <ul class="mb-0">
+                                    @foreach (string error in packingErrors)
+                                    {
+                                        <li>@error</li>
+                                    }
+                                </ul>
+                            </div>
+                        }
+
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle">
+                                <caption class="visually-hidden">Контейнеры и результаты упаковки</caption>
+                                <thead>
+                                    <tr>
+                                        <th class="button-column" scope="col" aria-label="Действия"></th>
+                                        <th class="data-column text-center" scope="col">Длина</th>
+                                        <th class="data-column text-center" scope="col">Ширина</th>
+                                        <th class="data-column text-center" scope="col">Высота</th>
+                                        <th class="button-column gray-cell" scope="col" aria-label="Разделитель"></th>
+                                        <th class="data-column text-center" scope="col">Время (мс)</th>
+                                        <th class="data-column text-center" scope="col">Заполненный объём, %</th>
+                                        <th class="data-column text-center" scope="col">Упаковано</th>
+                                        <th class="data-column text-center" scope="col">Не упаковано</th>
+                                        <th scope="col" aria-label="Визуализация"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (int index = 0; index < containers.Count; index++)
+                                    {
+                                        int containerIndex = index;
+                                        PackingContainerFormModel container = containers[containerIndex];
+                                        string rowLabel = $"Контейнер {containerIndex + 1}";
+
+                                        <tr @key="container.Id">
+                                            <td>
+                                                <button type="button" class="btn btn-outline-danger btn-sm" disabled="@isPacking" aria-label="Удалить контейнер @(containerIndex + 1)" @onclick="() => RemoveContainer(containerIndex)">-</button>
+                                            </td>
+                                            <td>
+                                                <InputNumber min="1" step="any" inputmode="decimal" class="form-control form-control-sm text-center" disabled="@isPacking" @bind-Value="container.Length" aria-label="@($"{rowLabel}: Длина")" aria-invalid="@GetAriaInvalid(container, nameof(PackingContainerFormModel.Length))" title="@GetFieldError(container, nameof(PackingContainerFormModel.Length))" />
+                                                <ValidationMessage For="@(() => container.Length)" class="invalid-feedback" />
+                                            </td>
+                                            <td>
+                                                <InputNumber min="1" step="any" inputmode="decimal" class="form-control form-control-sm text-center" disabled="@isPacking" @bind-Value="container.Width" aria-label="@($"{rowLabel}: Ширина")" aria-invalid="@GetAriaInvalid(container, nameof(PackingContainerFormModel.Width))" title="@GetFieldError(container, nameof(PackingContainerFormModel.Width))" />
+                                                <ValidationMessage For="@(() => container.Width)" class="invalid-feedback" />
+                                            </td>
+                                            <td>
+                                                <InputNumber min="1" step="any" inputmode="decimal" class="form-control form-control-sm text-center" disabled="@isPacking" @bind-Value="container.Height" aria-label="@($"{rowLabel}: Высота")" aria-invalid="@GetAriaInvalid(container, nameof(PackingContainerFormModel.Height))" title="@GetFieldError(container, nameof(PackingContainerFormModel.Height))" />
+                                                <ValidationMessage For="@(() => container.Height)" class="invalid-feedback" />
+                                            </td>
+                                            <td class="gray-cell"></td>
+                                            @if (container.PackingResult is null)
+                                            {
+                                                <td colspan="5" class="text-muted">Результаты появятся после расчёта упаковки.</td>
+                                            }
+                                            else
+                                            {
+                                                AlgorithmPackingResult result = container.PackingResult;
+
+                                                <td class="data-column text-center">
+                                                    <p class="form-control-plaintext mb-0">@result.PackTimeInMilliseconds</p>
+                                                </td>
+                                                <td class="data-column text-center">
+                                                    <p class="form-control-plaintext mb-0">@result.PercentContainerVolumePacked</p>
+                                                </td>
+                                                <td class="data-column text-center @GetPackedCountCellClass(result)">
+                                                    <p class="form-control-plaintext mb-0">@(result.PackedItems?.Count ?? 0)</p>
+                                                </td>
+                                                <td class="data-column text-center @GetPackedCountCellClass(result)">
+                                                    <p class="form-control-plaintext mb-0">@(result.UnpackedItems?.Count ?? 0)</p>
+                                                </td>
+                                                <td class="data-column text-end">
+                                                    <button type="button" class="btn btn-link btn-sm" aria-label="Показать визуализацию контейнера @(containerIndex + 1)" @onclick="() => OpenVisualizationAsync(container, result)">Показать</button>
+                                                </td>
+                                            }
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button type="button" class="btn btn-success btn-sm" disabled="@isPacking" aria-label="Добавить контейнер" @onclick="AddContainer">+</button>
+                    </div>
+                </div>
             </div>
         </div>
     </EditForm>
 </div>
 
+<VisualizationModal @ref="visualizationModal" />
+
 @code {
+    private readonly List<PackingItemFormModel> items = [];
+    private readonly List<PackingContainerFormModel> containers = [];
+    private readonly List<string> packingErrors = [];
+    private ValidationMessageStore validationMessages = default!;
+    private EditContext editContext = default!;
+    private VisualizationModal? visualizationModal;
+    private int nextItemId = 1;
+    private int nextContainerId = 1;
+    private bool isPacking;
+
     protected override void OnInitialized()
     {
-        State.Changed += OnStateChanged;
+        editContext = new EditContext(this);
+        editContext.SetFieldCssClassProvider(new BootstrapFieldCssClassProvider());
+        editContext.OnFieldChanged += OnFieldChanged;
+        validationMessages = new ValidationMessageStore(editContext);
     }
 
-    private void OnStateChanged()
+    private void AddItem()
     {
-        _ = InvokeAsync(StateHasChanged);
+        items.Add(new PackingItemFormModel(nextItemId++));
+        ClearPackingResults();
     }
 
-    public void Dispose()
+    private void RemoveItem(int index)
     {
-        State.Changed -= OnStateChanged;
+        if (index >= 0 && index < items.Count)
+        {
+            items.RemoveAt(index);
+            ClearPackingResults();
+        }
+    }
+
+    private void AddContainer()
+    {
+        containers.Add(new PackingContainerFormModel(nextContainerId++));
+        ClearPackingResults();
+    }
+
+    private void RemoveContainer(int index)
+    {
+        if (index >= 0 && index < containers.Count)
+        {
+            containers.RemoveAt(index);
+            ClearPackingResults();
+        }
+    }
+
+    private void ClearAll()
+    {
+        items.Clear();
+        containers.Clear();
+        ClearPackingResults();
+    }
+
+    private void GenerateDemoData()
+    {
+        items.Clear();
+        items.AddRange(
+        [
+            new(1000, 5, 4, 2, 1),
+            new(1001, 2, 1, 1, 3),
+            new(1002, 9, 7, 3, 4),
+            new(1003, 13, 6, 3, 8),
+            new(1004, 17, 8, 6, 1),
+            new(1005, 3, 3, 2, 2)
+        ]);
+
+        containers.Clear();
+        containers.AddRange(
+        [
+            new(1000, 15, 13, 9),
+            new(1001, 23, 9, 4),
+            new(1002, 16, 16, 6),
+            new(1003, 10, 8, 5),
+            new(1004, 40, 28, 20),
+            new(1005, 29, 19, 4),
+            new(1006, 18, 13, 1),
+            new(1007, 6, 6, 6),
+            new(1008, 8, 5, 5),
+            new(1009, 18, 13, 8),
+            new(1010, 17, 16, 15),
+            new(1011, 32, 10, 9),
+            new(1012, 60, 60, 60)
+        ]);
+
+        nextItemId = 1006;
+        nextContainerId = 1013;
+        ClearPackingResults();
+    }
+
+    private async Task PackContainersAsync()
+    {
+        if (isPacking)
+        {
+            return;
+        }
+
+        isPacking = true;
+
+        try
+        {
+            await PackAsync();
+        }
+        catch (Exception)
+        {
+            ApplyPackingErrors(["Во время упаковки произошла ошибка. Проверьте входные данные и попробуйте снова."]);
+        }
+        finally
+        {
+            isPacking = false;
+        }
+    }
+
+    private async Task PackAsync()
+    {
+        PrepareForPacking();
+
+        PackingInput input = PackingInputBuilder.Build(containers, items);
+        if (!input.IsValid)
+        {
+            ApplyInputValidationErrors(input.FieldErrors);
+            ApplyPackingErrors(input.SummaryErrors);
+            return;
+        }
+
+        List<ContainerPackingResult> packingResults = await Task.Run(
+            () => PackingService.Pack(input.Containers, input.ItemsToPack));
+
+        ApplyPackingResults(packingResults);
+    }
+
+    private static string GetPackedCountCellClass(AlgorithmPackingResult result) =>
+        (result.UnpackedItems?.Count ?? 0) == 0 && (result.PackedItems?.Count ?? 0) != 0 ? "bg-success" : string.Empty;
+
+    private async Task OpenVisualizationAsync(PackingContainerFormModel container, AlgorithmPackingResult result)
+    {
+        if (visualizationModal is not null)
+        {
+            await visualizationModal.ShowAsync(container, result);
+        }
+    }
+
+    private bool HasFieldError(object model, string fieldName) =>
+        editContext.GetValidationMessages(new FieldIdentifier(model, fieldName)).Any();
+
+    private string? GetFieldError(object model, string fieldName) =>
+        editContext.GetValidationMessages(new FieldIdentifier(model, fieldName)).FirstOrDefault();
+
+    private string? GetAriaInvalid(object model, string fieldName) =>
+        HasFieldError(model, fieldName) ? "true" : null;
+
+    private void PrepareForPacking()
+    {
+        packingErrors.Clear();
+        ClearInputValidation();
+    }
+
+    private void ApplyInputValidationErrors(IEnumerable<PackingFieldValidationError> errors)
+    {
+        validationMessages.Clear();
+
+        foreach (PackingFieldValidationError error in errors)
+        {
+            validationMessages.Add(new FieldIdentifier(error.Model, error.FieldName), error.Message);
+        }
+
+        editContext.NotifyValidationStateChanged();
+    }
+
+    private void ApplyPackingErrors(IEnumerable<string> errors)
+    {
+        packingErrors.Clear();
+        packingErrors.AddRange(errors);
+        ClearContainerPackingResults();
+    }
+
+    private void ApplyPackingResults(IReadOnlyCollection<ContainerPackingResult> packingResults)
+    {
+        packingErrors.Clear();
+
+        foreach (PackingContainerFormModel container in containers)
+        {
+            ContainerPackingResult? containerResult = packingResults.FirstOrDefault(result => result.ContainerID == container.Id);
+            container.PackingResult = containerResult?.PackingResult;
+        }
+    }
+
+    private void ClearPackingResults()
+    {
+        packingErrors.Clear();
+        ClearInputValidation();
+        ClearContainerPackingResults();
+    }
+
+    private void ClearContainerPackingResults()
+    {
+        foreach (PackingContainerFormModel container in containers)
+        {
+            container.PackingResult = null;
+        }
+    }
+
+    private void ClearInputValidation()
+    {
+        validationMessages.Clear();
+        editContext.NotifyValidationStateChanged();
+    }
+
+    private void OnFieldChanged(object? sender, FieldChangedEventArgs args)
+    {
+        validationMessages.Clear(args.FieldIdentifier);
+        packingErrors.Clear();
+        ClearContainerPackingResults();
+        editContext.NotifyValidationStateChanged();
     }
 }
