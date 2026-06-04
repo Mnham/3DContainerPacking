@@ -1,14 +1,10 @@
-﻿using System;
-
-namespace CromulentBisgetti.ContainerPacking.Entities
+﻿namespace CromulentBisgetti.ContainerPacking.Entities
 {
     /// <summary>
     /// An item to be packed. Also used to hold post-packing details for the item.
     /// </summary>
     public sealed class Item
     {
-        #region Public Properties
-
         /// <summary>
         /// Gets or sets the x coordinate of the location of the packed item within the container.
         /// </summary>
@@ -115,10 +111,6 @@ namespace CromulentBisgetti.ContainerPacking.Entities
         /// </value>
         public decimal Volume { get; set; }
 
-        #endregion Public Properties
-
-        #region Public Constructors
-
         public Item()
         {
         }
@@ -151,10 +143,6 @@ namespace CromulentBisgetti.ContainerPacking.Entities
             Quantity = quantity;
         }
 
-        #endregion Public Constructors
-
-        #region Public Methods
-
         public decimal GetDimDif(decimal exDim)
         {
             decimal dimDif = Math.Abs(exDim - Dim1);
@@ -174,7 +162,5 @@ namespace CromulentBisgetti.ContainerPacking.Entities
         public decimal GetMinDim() => Math.Min(Math.Min(Dim1, Dim2), Dim3);
 
         public override string ToString() => $"{ID} L{Dim1} W{Dim2} H{Dim3} Q{Quantity}";
-
-        #endregion Public Methods
     }
 }

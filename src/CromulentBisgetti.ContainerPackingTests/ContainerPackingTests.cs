@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
+﻿using System.Globalization;
 using System.Reflection;
-using System.Threading.Tasks;
 using CromulentBisgetti.ContainerPacking;
 using CromulentBisgetti.ContainerPacking.Algorithms;
 using CromulentBisgetti.ContainerPacking.Entities;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CromulentBisgetti.ContainerPackingTests
 {
@@ -126,8 +121,16 @@ namespace CromulentBisgetti.ContainerPackingTests
 
         private sealed class ReferenceCase
         {
+            public int Number { get; }
+            public Container Container { get; }
+            public List<Item> ItemsToPack { get; }
+            public int ExpectedTotalItems { get; }
+            public int ExpectedPackedItems { get; }
+            public decimal ExpectedContainerVolumePacked { get; }
+            public decimal ExpectedItemVolumePacked { get; }
+
             public ReferenceCase(
-                int number,
+                                                                                                    int number,
                 Container container,
                 List<Item> itemsToPack,
                 int expectedTotalItems,
@@ -143,20 +146,6 @@ namespace CromulentBisgetti.ContainerPackingTests
                 ExpectedContainerVolumePacked = expectedContainerVolumePacked;
                 ExpectedItemVolumePacked = expectedItemVolumePacked;
             }
-
-            public int Number { get; }
-
-            public Container Container { get; }
-
-            public List<Item> ItemsToPack { get; }
-
-            public int ExpectedTotalItems { get; }
-
-            public int ExpectedPackedItems { get; }
-
-            public decimal ExpectedContainerVolumePacked { get; }
-
-            public decimal ExpectedItemVolumePacked { get; }
         }
     }
 }

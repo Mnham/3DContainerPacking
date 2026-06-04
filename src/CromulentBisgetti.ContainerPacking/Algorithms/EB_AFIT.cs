@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using CromulentBisgetti.ContainerPacking.Entities;
+﻿using CromulentBisgetti.ContainerPacking.Entities;
 
 namespace CromulentBisgetti.ContainerPacking.Algorithms
 {
@@ -12,8 +9,6 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
     /// </summary>
     public sealed class EB_AFIT : IPackingAlgorithm
     {
-        #region Private Fields
-
         private decimal bbfx;
         private decimal bbfy;
         private decimal bbfz;
@@ -64,10 +59,6 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
         private decimal totalItemVolume;
         private int x;
 
-        #endregion Private Fields
-
-        #region Public Methods
-
         /// <summary>
         /// Runs the packing algorithm.
         /// </summary>
@@ -105,10 +96,6 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
 
             return result;
         }
-
-        #endregion Public Methods
-
-        #region Private Methods
 
         /// <summary>
         /// Analyzes each unpacked box to find the best fitting one to the empty space given.
@@ -232,10 +219,7 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
                             smallestZ.CumX = smallestZ.Post.CumX;
                             smallestZ.CumZ = smallestZ.Post.CumZ;
                             smallestZ.Post = smallestZ.Post.Post;
-                            if (smallestZ.Post != null)
-                            {
-                                smallestZ.Post.Pre = smallestZ;
-                            }
+                            smallestZ.Post?.Pre = smallestZ;
                         }
                         else if (smallestZ.Post == null)
                         {
@@ -248,10 +232,7 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
                             {
                                 smallestZ.Pre.Post = smallestZ.Post.Post;
 
-                                if (smallestZ.Post.Post != null)
-                                {
-                                    smallestZ.Post.Post.Pre = smallestZ.Pre;
-                                }
+                                smallestZ.Post.Post?.Pre = smallestZ.Pre;
 
                                 smallestZ.Pre.CumX = smallestZ.Post.CumX;
                             }
@@ -567,7 +548,7 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
             layers = new List<Layer>();
             itemsToPackCount = 0;
 
-            foreach (var item in items)
+            foreach (Item item in items)
             {
                 for (int i = 1; i <= item.Quantity; i++)
                 {
@@ -858,10 +839,7 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
                             smallestZ.CumX = smallestZ.Post.CumX;
                             smallestZ.Post = smallestZ.Post.Post;
 
-                            if (smallestZ.Post != null)
-                            {
-                                smallestZ.Post.Pre = smallestZ;
-                            }
+                            smallestZ.Post?.Pre = smallestZ;
                         }
                         else
                         {
@@ -1226,7 +1204,5 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
                 hundredPercentPacked = true;
             }
         }
-
-        #endregion Private Methods
     }
 }

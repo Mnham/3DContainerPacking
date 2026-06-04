@@ -1,4 +1,4 @@
-﻿var builder = WebApplication.CreateBuilder(args);
+﻿WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews()
     .AddJsonOptions(options =>
@@ -7,7 +7,7 @@ builder.Services.AddControllersWithViews()
         options.JsonSerializerOptions.DictionaryKeyPolicy = null;
     });
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {

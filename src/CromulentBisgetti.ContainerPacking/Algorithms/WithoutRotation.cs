@@ -1,18 +1,10 @@
 ﻿using CromulentBisgetti.ContainerPacking.Entities;
 
-using System;
-
 namespace CromulentBisgetti.ContainerPacking.Algorithms
 {
     internal class WithoutRotation : EB_AFIT_improved
     {
-        #region Protected Properties
-
         protected override AlgorithmType AlgorithmType => AlgorithmType.WithoutRotation;
-
-        #endregion Protected Properties
-
-        #region Protected Methods
 
         protected override void AnalyzeBoxOrientation(Action<decimal, decimal, decimal> analyzeBox, Item item)
         {
@@ -43,7 +35,5 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
                     break;
             }
         }
-
-        #endregion Protected Methods
     }
 }

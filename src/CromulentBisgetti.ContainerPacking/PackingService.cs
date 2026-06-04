@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 using CromulentBisgetti.ContainerPacking.Algorithms;
 using CromulentBisgetti.ContainerPacking.Entities;
 
@@ -13,8 +9,6 @@ namespace CromulentBisgetti.ContainerPacking
     /// </summary>
     public static class PackingService
     {
-        #region Public Methods
-
         /// <summary>
         /// Gets the packing algorithm from the specified algorithm type ID.
         /// </summary>
@@ -22,26 +16,15 @@ namespace CromulentBisgetti.ContainerPacking
         /// <exception cref="Exception">Invalid algorithm type.</exception>
         public static IPackingAlgorithm GetPackingAlgorithmFromTypeID(AlgorithmType type)
         {
-            switch (type)
+            return type switch
             {
-                case AlgorithmType.EB_AFIT:
-                    return new EB_AFIT();
-
-                case AlgorithmType.EB_AFIT_improved:
-                    return new EB_AFIT_improved();
-
-                case AlgorithmType.XYZRotationVertical:
-                    return new XYZRotationVertical();
-
-                case AlgorithmType.ZRotation:
-                    return new ZRotation();
-
-                case AlgorithmType.WithoutRotation:
-                    return new WithoutRotation();
-
-                default:
-                    throw new Exception("Invalid algorithm type.");
-            }
+                AlgorithmType.EB_AFIT => new EB_AFIT(),
+                AlgorithmType.EB_AFIT_improved => new EB_AFIT_improved(),
+                AlgorithmType.XYZRotationVertical => new XYZRotationVertical(),
+                AlgorithmType.ZRotation => new ZRotation(),
+                AlgorithmType.WithoutRotation => new WithoutRotation(),
+                _ => throw new Exception("Invalid algorithm type."),
+            };
         }
 
         /// <summary>
@@ -53,7 +36,7 @@ namespace CromulentBisgetti.ContainerPacking
         /// <returns>A container packing result with lists of the packed and unpacked items.</returns>
         public static List<ContainerPackingResult> Pack(List<Container> containers, List<Item> itemsToPack, List<int> algorithmTypeIDs)
         {
-            object sync = new object();
+            object sync = new();
             var result = new List<ContainerPackingResult>();
 
             Parallel.ForEach(containers, container =>
@@ -103,7 +86,5 @@ namespace CromulentBisgetti.ContainerPacking
 
             return result;
         }
-
-        #endregion Public Methods
     }
 }

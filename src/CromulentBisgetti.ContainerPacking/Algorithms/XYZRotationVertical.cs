@@ -1,18 +1,10 @@
 ﻿using CromulentBisgetti.ContainerPacking.Entities;
 
-using System.Linq;
-
 namespace CromulentBisgetti.ContainerPacking.Algorithms
 {
     internal class XYZRotationVertical : EB_AFIT_improved
     {
-        #region Protected Properties
-
         protected override AlgorithmType AlgorithmType => AlgorithmType.XYZRotationVertical;
-
-        #endregion Protected Properties
-
-        #region Protected Methods
 
         protected override void ExecuteIterations(Container container)
         {
@@ -92,8 +84,6 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
         }
 
         protected override bool SkipBoxBehind(int j) => false;
-
-        #endregion Protected Methods
 
         //itemsToPack[j].ID != itemsToPack[cboxi].ID;
     }

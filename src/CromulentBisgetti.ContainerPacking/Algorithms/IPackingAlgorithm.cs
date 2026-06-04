@@ -1,7 +1,5 @@
 ﻿using CromulentBisgetti.ContainerPacking.Entities;
 
-using System.Collections.Generic;
-
 namespace CromulentBisgetti.ContainerPacking.Algorithms
 {
     /// <summary>
@@ -9,8 +7,6 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
     /// </summary>
     public interface IPackingAlgorithm
     {
-        #region Public Methods
-
         /// <summary>
         /// Runs the algorithm on the specified container and items.
         /// </summary>
@@ -18,7 +14,5 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
         /// <param name="items">The items to pack.</param>
         /// <returns>The algorithm packing result.</returns>
         AlgorithmPackingResult Run(Container container, List<Item> items);
-
-        #endregion Public Methods
     }
 }

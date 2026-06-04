@@ -8,10 +8,8 @@
     /// all different lengths of all box dimensions along with evaluation values are
     /// stored in this array" (p. 3-6).
     /// </summary>
-    internal struct Layer
+    internal readonly struct Layer
     {
-        #region Public Properties
-
         /// <summary>
         /// Gets or sets the layer dimension value, representing a layer thickness.
         /// </summary>
@@ -29,16 +27,10 @@
         /// </value>
         public decimal LayerEval { get; }
 
-        #endregion Public Properties
-
-        #region Public Constructors
-
         public Layer(decimal layerDim = 0, decimal layerEval = -1)
         {
             LayerDim = layerDim;
             LayerEval = layerEval;
         }
-
-        #endregion Public Constructors
     }
 }

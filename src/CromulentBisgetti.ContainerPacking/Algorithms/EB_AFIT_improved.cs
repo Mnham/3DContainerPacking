@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using CromulentBisgetti.ContainerPacking.Entities;
+﻿using CromulentBisgetti.ContainerPacking.Entities;
 
 namespace CromulentBisgetti.ContainerPacking.Algorithms
 {
     public class EB_AFIT_improved : IPackingAlgorithm
     {
-        #region Protected Fields
-
-        protected readonly List<Item> itemsToPack = new List<Item> { new Item() };
+        protected readonly List<Item> itemsToPack = new() { new Item() };
         protected int bboxi;
         protected int boxi;
         protected int cboxi;
@@ -30,12 +25,8 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
         protected Dictionary<int, Item> sourceDictionaryItems;
         protected List<Item> sourceItems;
 
-        #endregion Protected Fields
-
-        #region Private Fields
-
-        private readonly List<Item> itemsPackedInOrder = new List<Item>();
-        private readonly ScrapPad scrapfirst = new ScrapPad();
+        private readonly List<Item> itemsPackedInOrder = new();
+        private readonly ScrapPad scrapfirst = new();
         private decimal bbfx;
         private decimal bbfy;
         private decimal bbfz;
@@ -55,7 +46,7 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
         private decimal containerVolume;
         private bool evened;
         private decimal layerInLayer;
-        private List<Layer> layers = new List<Layer>();
+        private List<Layer> layers = new();
         private decimal lilz;
         private bool packing;
         private decimal prelayer;
@@ -64,15 +55,7 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
         private ScrapPad smallestZ;
         private decimal totalItemsVolume;
 
-        #endregion Private Fields
-
-        #region Protected Properties
-
         protected virtual AlgorithmType AlgorithmType => AlgorithmType.EB_AFIT_improved;
-
-        #endregion Protected Properties
-
-        #region Public Methods
 
         public AlgorithmPackingResult Run(Container container, List<Item> items)
         {
@@ -106,10 +89,6 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
 
             return result;
         }
-
-        #endregion Public Methods
-
-        #region Protected Methods
 
         protected virtual void AnalyzeBoxOrientation(Action<decimal, decimal, decimal> analyzeBox, Item item)
         {
@@ -317,10 +296,7 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
                             smallestZ.CumZ = smallestZ.Post.CumZ;
                             smallestZ.CumX = smallestZ.Post.CumX;
                             smallestZ.Post = smallestZ.Post.Post;
-                            if (smallestZ.Post != null)
-                            {
-                                smallestZ.Post.Pre = smallestZ;
-                            }
+                            smallestZ.Post?.Pre = smallestZ;
                         }
                         else
                         {
@@ -665,10 +641,6 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
 
         protected virtual bool SkipBoxBehind(int j) => false;
 
-        #endregion Protected Methods
-
-        #region Private Methods
-
         private void CheckFound()
         {
             evened = false;
@@ -710,10 +682,7 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
                             smallestZ.CumX = smallestZ.Post.CumX;
                             smallestZ.CumZ = smallestZ.Post.CumZ;
                             smallestZ.Post = smallestZ.Post.Post;
-                            if (smallestZ.Post != null)
-                            {
-                                smallestZ.Post.Pre = smallestZ;
-                            }
+                            smallestZ.Post?.Pre = smallestZ;
                         }
                         else if (smallestZ.Post == null)
                         {
@@ -725,10 +694,7 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
                             if (smallestZ.Pre.CumZ == smallestZ.Post.CumZ)
                             {
                                 smallestZ.Pre.Post = smallestZ.Post.Post;
-                                if (smallestZ.Post.Post != null)
-                                {
-                                    smallestZ.Post.Post.Pre = smallestZ.Pre;
-                                }
+                                smallestZ.Post.Post?.Pre = smallestZ.Pre;
 
                                 smallestZ.Pre.CumX = smallestZ.Post.CumX;
                             }
@@ -867,7 +833,7 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
 
         private List<Layer> GetLayers()
         {
-            var newLayers = new List<Layer> { new Layer(0, -1) };
+            var newLayers = new List<Layer> { new(0, -1) };
             decimal exDim = 0;
             decimal dimen2 = 0;
             decimal dimen3 = 0;
@@ -921,7 +887,7 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
 
         private void Initialize()
         {
-            foreach (var itemData in sourceItems)
+            foreach (Item itemData in sourceItems)
             {
                 for (int i = 1; i <= itemData.Quantity; i++)
                 {
@@ -1103,7 +1069,5 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
                 }
             }
         }
-
-        #endregion Private Methods
     }
 }

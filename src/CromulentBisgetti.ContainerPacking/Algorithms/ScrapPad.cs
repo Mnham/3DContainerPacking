@@ -10,8 +10,6 @@
     /// </summary>
     internal sealed class ScrapPad
     {
-        #region Public Properties
-
         /// <summary>
         /// Gets or sets the x coordinate of the gap's right corner.
         /// </summary>
@@ -43,7 +41,5 @@
         /// The previous entry.
         /// </value>
         public ScrapPad Pre { get; set; }
-
-        #endregion Public Properties
     }
 }

@@ -5,8 +5,6 @@
     /// </summary>
     public sealed class Container
     {
-        #region Public Properties
-
         /// <summary>
         /// Gets or sets the container height.
         /// </summary>
@@ -47,10 +45,6 @@
         /// </value>
         public decimal Width { get; set; }
 
-        #endregion Public Properties
-
-        #region Public Constructors
-
         /// <summary>
         /// Initializes a new instance of the Container class.
         /// </summary>
@@ -66,7 +60,5 @@
             Height = height;
             Volume = length * width * height;
         }
-
-        #endregion Public Constructors
     }
 }

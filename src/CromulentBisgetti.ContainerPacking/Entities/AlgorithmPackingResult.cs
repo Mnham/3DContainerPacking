@@ -1,13 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
 namespace CromulentBisgetti.ContainerPacking.Entities
 {
     [DataContract]
     public sealed class AlgorithmPackingResult
     {
-        #region Public Properties
-
         [DataMember]
         public int AlgorithmID { get; set; }
 
@@ -67,7 +64,5 @@ namespace CromulentBisgetti.ContainerPacking.Entities
         /// </value>
         [DataMember]
         public List<Item> UnpackedItems { get; set; } = new List<Item>();
-
-        #endregion Public Properties
     }
 }

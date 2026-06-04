@@ -1,10 +1,7 @@
 ﻿using CromulentBisgetti.ContainerPacking;
 using CromulentBisgetti.ContainerPacking.Entities;
 using CromulentBisgetti.DemoApp.Models;
-
 using Microsoft.AspNetCore.Mvc;
-
-using System.Collections.Generic;
 
 namespace CromulentBisgetti.DemoApp.Controllers
 {
@@ -12,8 +9,6 @@ namespace CromulentBisgetti.DemoApp.Controllers
     [ApiController]
     public class ContainerPackingController : ControllerBase
     {
-        #region Public Methods
-
         // POST api/values
         [HttpPost]
         public ActionResult<List<ContainerPackingResult>> Post([FromBody] ContainerPackingRequest request)
@@ -27,13 +22,9 @@ namespace CromulentBisgetti.DemoApp.Controllers
             return PackingService.Pack(request.Containers, request.ItemsToPack, request.AlgorithmTypeIDs);
         }
 
-        #endregion Public Methods
-
-        #region Private Methods
-
         private static List<string> ValidatePackingRequest(ContainerPackingRequest request)
         {
-            List<string> errors = new List<string>();
+            var errors = new List<string>();
 
             if (request == null)
             {
@@ -102,7 +93,5 @@ namespace CromulentBisgetti.DemoApp.Controllers
 
             return errors;
         }
-
-        #endregion Private Methods
     }
 }
