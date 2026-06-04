@@ -1,17 +1,38 @@
 @page "/"
+@implements IDisposable
+@inject PackingFormState State
 
 <PageTitle>Упаковка контейнеров</PageTitle>
 
-<div id="content" class="container py-4">
-    <div class="row g-3">
-        <div class="col-12">
-            <ItemsPanel />
+<div class="packing-form container py-4">
+    <EditForm EditContext="State.EditContext">
+        <div class="row g-3">
+            <div class="col-12">
+                <ItemsPanel />
+            </div>
         </div>
-    </div>
 
-    <div class="row g-3 mt-1">
-        <div class="col-12">
-            <ContainersPanel />
+        <div class="row g-3 mt-1">
+            <div class="col-12">
+                <ContainersPanel />
+            </div>
         </div>
-    </div>
+    </EditForm>
 </div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        State.Changed += OnStateChanged;
+    }
+
+    private void OnStateChanged()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        State.Changed -= OnStateChanged;
+    }
+}

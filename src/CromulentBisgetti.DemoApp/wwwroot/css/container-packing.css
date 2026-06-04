@@ -1,16 +1,16 @@
-#drawing-container {
+.drawing-container {
     width: 100%;
     flex: 1 1 auto;
     min-height: 0;
 }
 
-#drawing-container canvas {
+.drawing-container canvas {
     display: block;
     width: 100% !important;
     height: 100% !important;
 }
 
-#content table {
+.packing-form table {
     font-size: 14px;
 }
 
@@ -20,10 +20,6 @@
 
 .data-column {
     width: 80px;
-}
-
-.algorithm-name-column {
-    width: 180px;
 }
 
 .gray-cell {

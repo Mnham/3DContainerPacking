@@ -3,7 +3,7 @@
 <div class="card h-100">
     <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
         <h2 class="h5 mb-0">Предметы для упаковки</h2>
-        <button id="generate-items" type="button" class="btn btn-outline-secondary btn-sm" @onclick="State.GenerateSampleItems">Сгенерировать предметы для примера</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" disabled="@State.IsPacking" @onclick="State.GenerateSampleItems">Сгенерировать предметы для примера</button>
     </div>
     <div class="card-body">
         <div class="table-responsive">
@@ -18,43 +18,32 @@
                         <th class="data-column text-center" scope="col">Количество</th>
                     </tr>
                 </thead>
-                <tbody id="items-to-pack">
+                <tbody>
                     @for (int index = 0; index < State.Items.Count; index++)
                     {
                         int itemIndex = index;
                         PackingItemFormModel item = State.Items[itemIndex];
+                        string rowLabel = $"Предмет {itemIndex + 1}";
 
                         <tr @key="item.Id">
                             <td>
-                                <button type="button" class="btn btn-outline-danger btn-sm" aria-label="Удалить предмет @(itemIndex + 1)" @onclick="() => State.RemoveItem(itemIndex)">-</button>
+                                <button type="button" class="btn btn-outline-danger btn-sm" disabled="@State.IsPacking" aria-label="Удалить предмет @(itemIndex + 1)" @onclick="() => State.RemoveItem(itemIndex)">-</button>
                             </td>
                             <td>
-                                <input type="number" min="1" step="any" inputmode="decimal" class="@GetInputClass(item, nameof(item.Length))" @bind="item.Length" @bind:event="oninput" aria-label="Предмет @(itemIndex + 1): Длина" aria-invalid="@GetAriaInvalid(item, nameof(item.Length))" title="@item.GetFieldError(nameof(item.Length))" />
-                                @if (item.GetFieldError(nameof(item.Length)) is string lengthError)
-                                {
-                                    <div class="invalid-feedback">@lengthError</div>
-                                }
+                                <InputNumber min="1" step="any" inputmode="decimal" class="form-control form-control-sm text-center" disabled="@State.IsPacking" @bind-Value="item.Length" aria-label="@($"{rowLabel}: Длина")" aria-invalid="@GetAriaInvalid(item, nameof(PackingItemFormModel.Length))" title="@State.GetFieldError(item, nameof(PackingItemFormModel.Length))" />
+                                <ValidationMessage For="@(() => item.Length)" class="invalid-feedback" />
                             </td>
                             <td>
-                                <input type="number" min="1" step="any" inputmode="decimal" class="@GetInputClass(item, nameof(item.Width))" @bind="item.Width" @bind:event="oninput" aria-label="Предмет @(itemIndex + 1): Ширина" aria-invalid="@GetAriaInvalid(item, nameof(item.Width))" title="@item.GetFieldError(nameof(item.Width))" />
-                                @if (item.GetFieldError(nameof(item.Width)) is string widthError)
-                                {
-                                    <div class="invalid-feedback">@widthError</div>
-                                }
+                                <InputNumber min="1" step="any" inputmode="decimal" class="form-control form-control-sm text-center" disabled="@State.IsPacking" @bind-Value="item.Width" aria-label="@($"{rowLabel}: Ширина")" aria-invalid="@GetAriaInvalid(item, nameof(PackingItemFormModel.Width))" title="@State.GetFieldError(item, nameof(PackingItemFormModel.Width))" />
+                                <ValidationMessage For="@(() => item.Width)" class="invalid-feedback" />
                             </td>
                             <td>
-                                <input type="number" min="1" step="any" inputmode="decimal" class="@GetInputClass(item, nameof(item.Height))" @bind="item.Height" @bind:event="oninput" aria-label="Предмет @(itemIndex + 1): Высота" aria-invalid="@GetAriaInvalid(item, nameof(item.Height))" title="@item.GetFieldError(nameof(item.Height))" />
-                                @if (item.GetFieldError(nameof(item.Height)) is string heightError)
-                                {
-                                    <div class="invalid-feedback">@heightError</div>
-                                }
+                                <InputNumber min="1" step="any" inputmode="decimal" class="form-control form-control-sm text-center" disabled="@State.IsPacking" @bind-Value="item.Height" aria-label="@($"{rowLabel}: Высота")" aria-invalid="@GetAriaInvalid(item, nameof(PackingItemFormModel.Height))" title="@State.GetFieldError(item, nameof(PackingItemFormModel.Height))" />
+                                <ValidationMessage For="@(() => item.Height)" class="invalid-feedback" />
                             </td>
                             <td>
-                                <input type="number" min="1" step="1" inputmode="numeric" class="@GetInputClass(item, nameof(item.Quantity))" @bind="item.Quantity" @bind:event="oninput" aria-label="Предмет @(itemIndex + 1): Количество" aria-invalid="@GetAriaInvalid(item, nameof(item.Quantity))" title="@item.GetFieldError(nameof(item.Quantity))" />
-                                @if (item.GetFieldError(nameof(item.Quantity)) is string quantityError)
-                                {
-                                    <div class="invalid-feedback">@quantityError</div>
-                                }
+                                <InputNumber min="1" step="1" inputmode="numeric" class="form-control form-control-sm text-center" disabled="@State.IsPacking" @bind-Value="item.Quantity" aria-label="@($"{rowLabel}: Количество")" aria-invalid="@GetAriaInvalid(item, nameof(PackingItemFormModel.Quantity))" title="@State.GetFieldError(item, nameof(PackingItemFormModel.Quantity))" />
+                                <ValidationMessage For="@(() => item.Quantity)" class="invalid-feedback" />
                             </td>
                         </tr>
                     }
@@ -63,14 +52,11 @@
         </div>
     </div>
     <div class="card-footer">
-        <button id="add-item" type="button" class="btn btn-success btn-sm" aria-label="Добавить предмет" @onclick="State.AddItem">+</button>
+        <button type="button" class="btn btn-success btn-sm" disabled="@State.IsPacking" aria-label="Добавить предмет" @onclick="State.AddItem">+</button>
     </div>
 </div>
 
 @code {
-    private static string GetInputClass(PackingItemFormModel item, string fieldName) =>
-        item.HasFieldError(fieldName) ? "form-control form-control-sm text-center is-invalid" : "form-control form-control-sm text-center";
-
-    private static string? GetAriaInvalid(PackingItemFormModel item, string fieldName) =>
-        item.HasFieldError(fieldName) ? "true" : null;
+    private string? GetAriaInvalid(PackingItemFormModel item, string fieldName) =>
+        State.HasFieldError(item, fieldName) ? "true" : null;
 }

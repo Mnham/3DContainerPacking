@@ -1,18 +1,19 @@
 @implements IAsyncDisposable
+@using CromulentBisgetti.DemoApp.Visualization
 @inject IJSRuntime JS
 
-<div id="renderModal" class="modal fade" tabindex="-1" aria-labelledby="renderModalLabel" aria-hidden="true">
+<div @ref="renderModalElement" class="modal fade" tabindex="-1" aria-labelledby="@renderModalLabelId" aria-hidden="true">
     <div class="modal-dialog modal-fullscreen">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 id="renderModalLabel" class="modal-title h5">Визуализация упаковки</h2>
+                <h2 id="@renderModalLabelId" class="modal-title h5">Визуализация упаковки</h2>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
             </div>
             <div class="modal-body d-flex flex-column text-center p-2">
-                <div id="drawing-container"></div>
+                <div @ref="drawingContainerElement" class="drawing-container"></div>
                 <div class="mt-2">
-                    <button id="unpack-render-item" type="button" class="btn btn-outline-secondary" disabled>Назад</button>
-                    <button id="pack-render-item" type="button" class="btn btn-outline-secondary" disabled>Вперёд</button>
+                    <button @ref="unpackRenderItemButtonElement" type="button" class="btn btn-outline-secondary" disabled>Назад</button>
+                    <button @ref="packRenderItemButtonElement" type="button" class="btn btn-outline-secondary" disabled>Вперёд</button>
                 </div>
             </div>
         </div>
@@ -21,18 +22,43 @@
 
 @code {
     private IJSObjectReference? module;
+    private IJSObjectReference? viewer;
+    private readonly string renderModalLabelId = $"renderModalLabel-{Guid.NewGuid():N}";
+    private ElementReference renderModalElement;
+    private ElementReference drawingContainerElement;
+    private ElementReference unpackRenderItemButtonElement;
+    private ElementReference packRenderItemButtonElement;
 
     public async Task ShowAsync(PackingContainerFormModel container, AlgorithmPackingResult result)
     {
         module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/container-packing/blazor-packing-viewer.js");
-        await module.InvokeVoidAsync("openPackingView", CreateVisualizationContainer(container, result));
+        viewer ??= await module.InvokeAsync<IJSObjectReference>(
+            "createPackingViewer",
+            renderModalElement,
+            drawingContainerElement,
+            unpackRenderItemButtonElement,
+            packRenderItemButtonElement);
+
+        await viewer.InvokeVoidAsync("open", CreateVisualizationContainer(container, result));
     }
 
     async ValueTask IAsyncDisposable.DisposeAsync()
     {
-        if (module is not null)
+        try
         {
-            await module.DisposeAsync();
+            if (viewer is not null)
+            {
+                await viewer.InvokeVoidAsync("dispose");
+                await viewer.DisposeAsync();
+            }
+
+            if (module is not null)
+            {
+                await module.DisposeAsync();
+            }
+        }
+        catch (JSDisconnectedException)
+        {
         }
     }
 
@@ -45,10 +71,7 @@
 
     private static PackingVisualizationResult CreateVisualizationResult(AlgorithmPackingResult result) =>
         new(
-            result.PackTimeInMilliseconds,
-            result.PercentContainerVolumePacked,
-            CreateVisualizationItems(result.PackedItems),
-            CreateVisualizationItems(result.UnpackedItems));
+            CreateVisualizationItems(result.PackedItems));
 
     private static IReadOnlyList<PackingVisualizationItem> CreateVisualizationItems(IEnumerable<Item>? items) =>
         items?.Select(item => new PackingVisualizationItem(
@@ -59,25 +82,4 @@
             item.PackDimX,
             item.PackDimY,
             item.PackDimZ)).ToList() ?? [];
-
-    private sealed record PackingVisualizationContainer(
-        decimal Length,
-        decimal Width,
-        decimal Height,
-        PackingVisualizationResult PackingResult);
-
-    private sealed record PackingVisualizationResult(
-        long PackTimeInMilliseconds,
-        decimal PercentContainerVolumePacked,
-        IReadOnlyList<PackingVisualizationItem> PackedItems,
-        IReadOnlyList<PackingVisualizationItem> UnpackedItems);
-
-    private sealed record PackingVisualizationItem(
-        int ID,
-        decimal CoordX,
-        decimal CoordY,
-        decimal CoordZ,
-        decimal PackDimX,
-        decimal PackDimY,
-        decimal PackDimZ);
 }

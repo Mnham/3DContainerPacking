@@ -1,19 +1,26 @@
 ﻿using CromulentBisgetti.ContainerPacking;
 using CromulentBisgetti.ContainerPacking.Entities;
+using Microsoft.AspNetCore.Components.Forms;
 
 namespace CromulentBisgetti.DemoApp.State
 {
-    public interface IFieldValidationTarget
-    {
-        void SetFieldError(string fieldName, string message);
-
-        void ClearFieldErrors();
-    }
-
     public sealed class PackingFormState
     {
+        private readonly ValidationMessageStore _validationMessages;
         private int _nextItemId = 1003;
         private int _nextContainerId = 1003;
+
+        public PackingFormState()
+        {
+            EditContext = new EditContext(this);
+            EditContext.SetFieldCssClassProvider(new BootstrapFieldCssClassProvider());
+            EditContext.OnFieldChanged += OnFieldChanged;
+            _validationMessages = new ValidationMessageStore(EditContext);
+        }
+
+        public event Action? Changed;
+
+        public EditContext EditContext { get; }
 
         public List<PackingItemFormModel> Items { get; private set; } =
         [
@@ -31,33 +38,52 @@ namespace CromulentBisgetti.DemoApp.State
 
         public List<string> PackingErrors { get; } = [];
 
-        public void PackContainers()
+        public bool IsPacking { get; private set; }
+
+        public void SetPackingInProgress(bool isPacking)
         {
-            PackingErrors.Clear();
-            ClearInputValidation();
-
-            List<Container> containers = BuildContainers();
-            List<Item> itemsToPack = BuildItemsToPack();
-
-            if (PackingErrors.Count > 0)
+            if (IsPacking == isPacking)
             {
-                ClearContainerPackingResults();
                 return;
             }
 
-            List<ContainerPackingResult> packingResults = PackingService.Pack(containers, itemsToPack);
+            IsPacking = isPacking;
+            NotifyChanged();
+        }
 
-            foreach (PackingContainerFormModel container in Containers)
+        public async Task PackAsync(CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            PrepareForPacking();
+
+            PackingInput input = ValidateInput();
+            if (!input.IsValid)
             {
-                ContainerPackingResult? containerResult = packingResults.FirstOrDefault(result => result.ContainerID == container.Id);
-                container.PackingResult = containerResult?.PackingResult;
+                ApplyInputValidationErrors(input.FieldErrors);
+                ApplyPackingErrors(input.SummaryErrors);
+                return;
             }
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            List<ContainerPackingResult> packingResults = await Task.Run(
+                () =>
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    List<ContainerPackingResult> results = PackingService.Pack(input.Containers, input.ItemsToPack);
+                    cancellationToken.ThrowIfCancellationRequested();
+                    return results;
+                },
+                cancellationToken);
+
+            ApplyPackingResults(packingResults);
         }
 
         public void AddItem()
         {
             Items.Add(new PackingItemFormModel(_nextItemId++));
             ClearPackingResults();
+            NotifyChanged();
         }
 
         public void RemoveItem(int index)
@@ -66,6 +92,7 @@ namespace CromulentBisgetti.DemoApp.State
             {
                 Items.RemoveAt(index);
                 ClearPackingResults();
+                NotifyChanged();
             }
         }
 
@@ -83,12 +110,14 @@ namespace CromulentBisgetti.DemoApp.State
 
             _nextItemId = 1006;
             ClearPackingResults();
+            NotifyChanged();
         }
 
         public void AddContainer()
         {
             Containers.Add(new PackingContainerFormModel(_nextContainerId++));
             ClearPackingResults();
+            NotifyChanged();
         }
 
         public void RemoveContainer(int index)
@@ -97,6 +126,7 @@ namespace CromulentBisgetti.DemoApp.State
             {
                 Containers.RemoveAt(index);
                 ClearPackingResults();
+                NotifyChanged();
             }
         }
 
@@ -121,88 +151,57 @@ namespace CromulentBisgetti.DemoApp.State
 
             _nextContainerId = 1013;
             ClearPackingResults();
+            NotifyChanged();
         }
 
-        private List<Container> BuildContainers()
+        private void PrepareForPacking()
         {
-            if (Containers.Count == 0)
-            {
-                PackingErrors.Add("Добавьте хотя бы один контейнер.");
-                return [];
-            }
-
-            var containers = new List<Container>();
-            for (int index = 0; index < Containers.Count; index++)
-            {
-                PackingContainerFormModel container = Containers[index];
-                string rowLabel = $"Контейнер {index + 1}";
-                decimal? length = ValidatePositiveDecimal(container, nameof(container.Length), "Длина", rowLabel, container.Length);
-                decimal? width = ValidatePositiveDecimal(container, nameof(container.Width), "Ширина", rowLabel, container.Width);
-                decimal? height = ValidatePositiveDecimal(container, nameof(container.Height), "Высота", rowLabel, container.Height);
-
-                if (length is not null && width is not null && height is not null)
-                {
-                    containers.Add(new Container(container.Id, length.Value, width.Value, height.Value));
-                }
-            }
-
-            return containers;
+            PackingErrors.Clear();
+            ClearInputValidation();
+            NotifyChanged();
         }
 
-        private List<Item> BuildItemsToPack()
+        public void ApplyPackingErrors(IEnumerable<string> errors)
         {
-            if (Items.Count == 0)
-            {
-                PackingErrors.Add("Добавьте хотя бы один предмет для упаковки.");
-                return [];
-            }
-
-            var itemsToPack = new List<Item>();
-            for (int index = 0; index < Items.Count; index++)
-            {
-                PackingItemFormModel item = Items[index];
-                string rowLabel = $"Предмет {index + 1}";
-                decimal? length = ValidatePositiveDecimal(item, nameof(item.Length), "Длина", rowLabel, item.Length);
-                decimal? width = ValidatePositiveDecimal(item, nameof(item.Width), "Ширина", rowLabel, item.Width);
-                decimal? height = ValidatePositiveDecimal(item, nameof(item.Height), "Высота", rowLabel, item.Height);
-                int? quantity = ValidatePositiveInteger(item, nameof(item.Quantity), "Количество", rowLabel, item.Quantity);
-
-                if (length is not null && width is not null && height is not null && quantity is not null)
-                {
-                    itemsToPack.Add(new Item(item.Id, length.Value, width.Value, height.Value, quantity.Value));
-                }
-            }
-
-            return itemsToPack;
+            PackingErrors.Clear();
+            PackingErrors.AddRange(errors);
+            ClearContainerPackingResults();
+            NotifyChanged();
         }
 
-        private decimal? ValidatePositiveDecimal(IFieldValidationTarget target, string fieldName, string fieldLabel, string rowLabel, decimal? value)
+        private void ApplyInputValidationErrors(IEnumerable<PackingFieldValidationError> errors)
         {
-            if (value is > 0)
+            _validationMessages.Clear();
+
+            foreach (PackingFieldValidationError error in errors)
             {
-                return value;
+                _validationMessages.Add(new FieldIdentifier(error.Model, error.FieldName), error.Message);
             }
 
-            AddFieldError(target, fieldName, $"{rowLabel}: поле \"{fieldLabel}\" должно быть числом больше 0.");
-            return null;
+            EditContext.NotifyValidationStateChanged();
+            NotifyChanged();
         }
 
-        private int? ValidatePositiveInteger(IFieldValidationTarget target, string fieldName, string fieldLabel, string rowLabel, int? value)
+        private void ApplyPackingResults(IReadOnlyCollection<ContainerPackingResult> packingResults)
         {
-            if (value is > 0)
+            PackingErrors.Clear();
+
+            foreach (PackingContainerFormModel container in Containers)
             {
-                return value;
+                ContainerPackingResult? containerResult = packingResults.FirstOrDefault(result => result.ContainerID == container.Id);
+                container.PackingResult = containerResult?.PackingResult;
             }
 
-            AddFieldError(target, fieldName, $"{rowLabel}: поле \"{fieldLabel}\" должно быть целым числом больше 0.");
-            return null;
+            NotifyChanged();
         }
 
-        private void AddFieldError(IFieldValidationTarget target, string fieldName, string message)
-        {
-            target.SetFieldError(fieldName, message);
-            PackingErrors.Add(message);
-        }
+        public bool HasFieldError(object model, string fieldName) =>
+            EditContext.GetValidationMessages(new FieldIdentifier(model, fieldName)).Any();
+
+        public string? GetFieldError(object model, string fieldName) =>
+            EditContext.GetValidationMessages(new FieldIdentifier(model, fieldName)).FirstOrDefault();
+
+        private void NotifyChanged() => Changed?.Invoke();
 
         private void ClearPackingResults()
         {
@@ -221,22 +220,127 @@ namespace CromulentBisgetti.DemoApp.State
 
         private void ClearInputValidation()
         {
-            foreach (PackingItemFormModel item in Items)
+            _validationMessages.Clear();
+            EditContext.NotifyValidationStateChanged();
+        }
+
+        private void OnFieldChanged(object? sender, FieldChangedEventArgs args)
+        {
+            _validationMessages.Clear(args.FieldIdentifier);
+            PackingErrors.Clear();
+            ClearContainerPackingResults();
+            EditContext.NotifyValidationStateChanged();
+            NotifyChanged();
+        }
+
+        private PackingInput ValidateInput()
+        {
+            var input = new PackingInput();
+            BuildContainers(input);
+            BuildItemsToPack(input);
+
+            return input;
+        }
+
+        private void BuildContainers(PackingInput input)
+        {
+            if (Containers.Count == 0)
             {
-                ((IFieldValidationTarget)item).ClearFieldErrors();
+                input.SummaryErrors.Add("Добавьте хотя бы один контейнер.");
+                return;
             }
 
-            foreach (PackingContainerFormModel container in Containers)
+            for (int index = 0; index < Containers.Count; index++)
             {
-                ((IFieldValidationTarget)container).ClearFieldErrors();
+                PackingContainerFormModel container = Containers[index];
+                string rowLabel = $"Контейнер {index + 1}";
+                decimal? length = ValidatePositiveDecimal(container, nameof(container.Length), "Длина", rowLabel, container.Length, input);
+                decimal? width = ValidatePositiveDecimal(container, nameof(container.Width), "Ширина", rowLabel, container.Width, input);
+                decimal? height = ValidatePositiveDecimal(container, nameof(container.Height), "Высота", rowLabel, container.Height, input);
+
+                if (length is not null && width is not null && height is not null)
+                {
+                    input.Containers.Add(new Container(container.Id, length.Value, width.Value, height.Value));
+                }
             }
+        }
+
+        private void BuildItemsToPack(PackingInput input)
+        {
+            if (Items.Count == 0)
+            {
+                input.SummaryErrors.Add("Добавьте хотя бы один предмет для упаковки.");
+                return;
+            }
+
+            for (int index = 0; index < Items.Count; index++)
+            {
+                PackingItemFormModel item = Items[index];
+                string rowLabel = $"Предмет {index + 1}";
+                decimal? length = ValidatePositiveDecimal(item, nameof(item.Length), "Длина", rowLabel, item.Length, input);
+                decimal? width = ValidatePositiveDecimal(item, nameof(item.Width), "Ширина", rowLabel, item.Width, input);
+                decimal? height = ValidatePositiveDecimal(item, nameof(item.Height), "Высота", rowLabel, item.Height, input);
+                int? quantity = ValidatePositiveInteger(item, nameof(item.Quantity), "Количество", rowLabel, item.Quantity, input);
+
+                if (length is not null && width is not null && height is not null && quantity is not null)
+                {
+                    input.ItemsToPack.Add(new Item(item.Id, length.Value, width.Value, height.Value, quantity.Value));
+                }
+            }
+        }
+
+        private static decimal? ValidatePositiveDecimal(
+            object model,
+            string fieldName,
+            string fieldLabel,
+            string rowLabel,
+            decimal? value,
+            PackingInput input)
+        {
+            if (value is > 0)
+            {
+                return value;
+            }
+
+            input.FieldErrors.Add(new PackingFieldValidationError(model, fieldName, $"{rowLabel}: поле \"{fieldLabel}\" должно быть числом больше 0."));
+            return null;
+        }
+
+        private static int? ValidatePositiveInteger(
+            object model,
+            string fieldName,
+            string fieldLabel,
+            string rowLabel,
+            int? value,
+            PackingInput input)
+        {
+            if (value is > 0)
+            {
+                return value;
+            }
+
+            input.FieldErrors.Add(new PackingFieldValidationError(model, fieldName, $"{rowLabel}: поле \"{fieldLabel}\" должно быть целым числом больше 0."));
+            return null;
+        }
+
+        private sealed record PackingFieldValidationError(object Model, string FieldName, string Message);
+
+        private sealed class PackingInput
+        {
+            public List<Container> Containers { get; } = [];
+
+            public List<Item> ItemsToPack { get; } = [];
+
+            public List<string> SummaryErrors { get; } = [];
+
+            public List<PackingFieldValidationError> FieldErrors { get; } = [];
+
+            public bool IsValid => SummaryErrors.Count == 0 && FieldErrors.Count == 0;
         }
     }
 
-    public sealed class PackingItemFormModel(int id, decimal? length = null, decimal? width = null, decimal? height = null, int? quantity = null) : IFieldValidationTarget
+    public sealed class PackingItemFormModel(int id, decimal? length = null, decimal? width = null, decimal? height = null, int? quantity = null)
     {
-        private readonly Dictionary<string, string> _fieldErrors = [];
-
         public int Id { get; } = id;
 
         public decimal? Length { get; set; } = length;
@@ -246,21 +350,10 @@ namespace CromulentBisgetti.DemoApp.State
         public decimal? Height { get; set; } = height;
 
         public int? Quantity { get; set; } = quantity;
-
-        public string? GetFieldError(string fieldName) =>
-            _fieldErrors.TryGetValue(fieldName, out string? error) ? error : null;
-
-        public bool HasFieldError(string fieldName) => _fieldErrors.ContainsKey(fieldName);
-
-        void IFieldValidationTarget.SetFieldError(string fieldName, string message) => _fieldErrors[fieldName] = message;
-
-        void IFieldValidationTarget.ClearFieldErrors() => _fieldErrors.Clear();
     }
 
-    public sealed class PackingContainerFormModel(int id, decimal? length = null, decimal? width = null, decimal? height = null) : IFieldValidationTarget
+    public sealed class PackingContainerFormModel(int id, decimal? length = null, decimal? width = null, decimal? height = null)
     {
-        private readonly Dictionary<string, string> _fieldErrors = [];
-
         public int Id { get; } = id;
 
         public decimal? Length { get; set; } = length;
@@ -270,14 +363,11 @@ namespace CromulentBisgetti.DemoApp.State
         public decimal? Height { get; set; } = height;
 
         public AlgorithmPackingResult? PackingResult { get; set; }
+    }
 
-        public string? GetFieldError(string fieldName) =>
-            _fieldErrors.TryGetValue(fieldName, out string? error) ? error : null;
-
-        public bool HasFieldError(string fieldName) => _fieldErrors.ContainsKey(fieldName);
-
-        void IFieldValidationTarget.SetFieldError(string fieldName, string message) => _fieldErrors[fieldName] = message;
-
-        void IFieldValidationTarget.ClearFieldErrors() => _fieldErrors.Clear();
+    internal sealed class BootstrapFieldCssClassProvider : FieldCssClassProvider
+    {
+        public override string GetFieldCssClass(EditContext editContext, in FieldIdentifier fieldIdentifier) =>
+            editContext.GetValidationMessages(fieldIdentifier).Any() ? "is-invalid" : string.Empty;
     }
 }

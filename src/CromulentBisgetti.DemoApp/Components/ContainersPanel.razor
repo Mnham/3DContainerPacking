@@ -1,16 +1,33 @@
+@implements IDisposable
 @inject PackingFormState State
 
-<div class="card">
+<div class="card" aria-busy="@State.IsPacking">
     <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
         <h2 class="h5 mb-0">Контейнеры</h2>
         <div class="d-flex flex-wrap gap-2">
-            <button id="generate-containers" type="button" class="btn btn-outline-secondary btn-sm" @onclick="State.GenerateSampleContainers">Сгенерировать контейнеры для примера</button>
-            <button id="pack-containers" type="button" class="btn btn-primary btn-sm" disabled="@isPacking" @onclick="PackContainersAsync">
-                @(isPacking ? "Упаковка..." : "Упаковать")
+            <button type="button" class="btn btn-outline-secondary btn-sm" disabled="@State.IsPacking" @onclick="State.GenerateSampleContainers">Сгенерировать контейнеры для примера</button>
+            <button type="button" class="btn btn-primary btn-sm" disabled="@State.IsPacking" @onclick="PackContainersAsync">
+                @(State.IsPacking ? "Упаковка..." : "Упаковать")
             </button>
+            @if (State.IsPacking)
+            {
+                <button type="button" class="btn btn-outline-secondary btn-sm" disabled="@(packingCancellation?.IsCancellationRequested ?? false)" @onclick="CancelPacking">Отменить</button>
+            }
         </div>
     </div>
     <div class="card-body">
+        @if (State.IsPacking)
+        {
+            <div class="alert alert-info d-flex align-items-center gap-2" role="status" aria-live="polite">
+                <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                <span>@(packingStatusMessage ?? "Выполняется упаковка. Входные данные временно заблокированы.")</span>
+            </div>
+        }
+        else if (packingStatusMessage is not null)
+        {
+            <div class="alert alert-info" role="status" aria-live="polite">@packingStatusMessage</div>
+        }
+
         @if (State.PackingErrors.Count > 0)
         {
             <div class="alert alert-danger" role="alert">
@@ -41,36 +58,28 @@
                         <th scope="col" aria-label="Визуализация"></th>
                     </tr>
                 </thead>
-                <tbody id="containers">
+                <tbody>
                     @for (int index = 0; index < State.Containers.Count; index++)
                     {
                         int containerIndex = index;
                         PackingContainerFormModel container = State.Containers[containerIndex];
+                        string rowLabel = $"Контейнер {containerIndex + 1}";
 
                         <tr @key="container.Id">
                             <td>
-                                <button type="button" class="btn btn-outline-danger btn-sm" aria-label="Удалить контейнер @(containerIndex + 1)" @onclick="() => State.RemoveContainer(containerIndex)">-</button>
+                                <button type="button" class="btn btn-outline-danger btn-sm" disabled="@State.IsPacking" aria-label="Удалить контейнер @(containerIndex + 1)" @onclick="() => State.RemoveContainer(containerIndex)">-</button>
                             </td>
                             <td>
-                                <input type="number" min="1" step="any" inputmode="decimal" class="@GetInputClass(container, nameof(container.Length))" @bind="container.Length" @bind:event="oninput" aria-label="Контейнер @(containerIndex + 1): Длина" aria-invalid="@GetAriaInvalid(container, nameof(container.Length))" title="@container.GetFieldError(nameof(container.Length))" />
-                                @if (container.GetFieldError(nameof(container.Length)) is string lengthError)
-                                {
-                                    <div class="invalid-feedback">@lengthError</div>
-                                }
+                                <InputNumber min="1" step="any" inputmode="decimal" class="form-control form-control-sm text-center" disabled="@State.IsPacking" @bind-Value="container.Length" aria-label="@($"{rowLabel}: Длина")" aria-invalid="@GetAriaInvalid(container, nameof(PackingContainerFormModel.Length))" title="@State.GetFieldError(container, nameof(PackingContainerFormModel.Length))" />
+                                <ValidationMessage For="@(() => container.Length)" class="invalid-feedback" />
                             </td>
                             <td>
-                                <input type="number" min="1" step="any" inputmode="decimal" class="@GetInputClass(container, nameof(container.Width))" @bind="container.Width" @bind:event="oninput" aria-label="Контейнер @(containerIndex + 1): Ширина" aria-invalid="@GetAriaInvalid(container, nameof(container.Width))" title="@container.GetFieldError(nameof(container.Width))" />
-                                @if (container.GetFieldError(nameof(container.Width)) is string widthError)
-                                {
-                                    <div class="invalid-feedback">@widthError</div>
-                                }
+                                <InputNumber min="1" step="any" inputmode="decimal" class="form-control form-control-sm text-center" disabled="@State.IsPacking" @bind-Value="container.Width" aria-label="@($"{rowLabel}: Ширина")" aria-invalid="@GetAriaInvalid(container, nameof(PackingContainerFormModel.Width))" title="@State.GetFieldError(container, nameof(PackingContainerFormModel.Width))" />
+                                <ValidationMessage For="@(() => container.Width)" class="invalid-feedback" />
                             </td>
                             <td>
-                                <input type="number" min="1" step="any" inputmode="decimal" class="@GetInputClass(container, nameof(container.Height))" @bind="container.Height" @bind:event="oninput" aria-label="Контейнер @(containerIndex + 1): Высота" aria-invalid="@GetAriaInvalid(container, nameof(container.Height))" title="@container.GetFieldError(nameof(container.Height))" />
-                                @if (container.GetFieldError(nameof(container.Height)) is string heightError)
-                                {
-                                    <div class="invalid-feedback">@heightError</div>
-                                }
+                                <InputNumber min="1" step="any" inputmode="decimal" class="form-control form-control-sm text-center" disabled="@State.IsPacking" @bind-Value="container.Height" aria-label="@($"{rowLabel}: Высота")" aria-invalid="@GetAriaInvalid(container, nameof(PackingContainerFormModel.Height))" title="@State.GetFieldError(container, nameof(PackingContainerFormModel.Height))" />
+                                <ValidationMessage For="@(() => container.Height)" class="invalid-feedback" />
                             </td>
                             <td class="gray-cell"></td>
                             @if (container.PackingResult is null)
@@ -104,29 +113,64 @@
         </div>
     </div>
     <div class="card-footer">
-        <button id="add-container" type="button" class="btn btn-success btn-sm" aria-label="Добавить контейнер" @onclick="State.AddContainer">+</button>
+        <button type="button" class="btn btn-success btn-sm" disabled="@State.IsPacking" aria-label="Добавить контейнер" @onclick="State.AddContainer">+</button>
     </div>
 </div>
 
 <VisualizationModal @ref="visualizationModal" />
 
 @code {
-    private bool isPacking;
+    private CancellationTokenSource? packingCancellation;
+    private string? packingStatusMessage;
     private VisualizationModal? visualizationModal;
 
     private async Task PackContainersAsync()
     {
-        isPacking = true;
+        if (State.IsPacking)
+        {
+            return;
+        }
+
+        packingCancellation?.Dispose();
+        var cancellation = new CancellationTokenSource();
+        packingCancellation = cancellation;
+        packingStatusMessage = null;
+        State.SetPackingInProgress(true);
 
         try
         {
-            await Task.Yield();
-            State.PackContainers();
+            await State.PackAsync(cancellation.Token);
+        }
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+        {
+            packingStatusMessage = "Упаковка отменена.";
+        }
+        catch (Exception)
+        {
+            packingStatusMessage = null;
+            State.ApplyPackingErrors(["Во время упаковки произошла ошибка. Проверьте входные данные и попробуйте снова."]);
         }
         finally
         {
-            isPacking = false;
+            if (ReferenceEquals(packingCancellation, cancellation))
+            {
+                packingCancellation = null;
+            }
+
+            cancellation.Dispose();
+            State.SetPackingInProgress(false);
         }
+    }
+
+    private void CancelPacking()
+    {
+        if (!State.IsPacking)
+        {
+            return;
+        }
+
+        packingStatusMessage = "Отмена упаковки...";
+        packingCancellation?.Cancel();
     }
 
     private static string GetPackedCountCellClass(AlgorithmPackingResult result) =>
@@ -140,9 +184,17 @@
         }
     }
 
-    private static string GetInputClass(PackingContainerFormModel container, string fieldName) =>
-        container.HasFieldError(fieldName) ? "form-control form-control-sm text-center is-invalid" : "form-control form-control-sm text-center";
+    private string? GetAriaInvalid(PackingContainerFormModel container, string fieldName) =>
+        State.HasFieldError(container, fieldName) ? "true" : null;
 
-    private static string? GetAriaInvalid(PackingContainerFormModel container, string fieldName) =>
-        container.HasFieldError(fieldName) ? "true" : null;
+    public void Dispose()
+    {
+        packingCancellation?.Cancel();
+        packingCancellation?.Dispose();
+
+        if (State.IsPacking)
+        {
+            State.SetPackingInProgress(false);
+        }
+    }
 }
