@@ -20,6 +20,7 @@ namespace CromulentBisgetti.DemoApp.State
             if (containers.Count == 0)
             {
                 input.SummaryErrors.Add("Добавьте хотя бы один контейнер.");
+
                 return;
             }
 
@@ -43,6 +44,7 @@ namespace CromulentBisgetti.DemoApp.State
             if (items.Count == 0)
             {
                 input.SummaryErrors.Add("Добавьте хотя бы один предмет для упаковки.");
+
                 return;
             }
 
@@ -76,6 +78,7 @@ namespace CromulentBisgetti.DemoApp.State
             }
 
             input.FieldErrors.Add(new PackingFieldValidationError(model, fieldName, $"{rowLabel}: поле \"{fieldLabel}\" должно быть числом больше 0."));
+
             return null;
         }
 
@@ -93,6 +96,7 @@ namespace CromulentBisgetti.DemoApp.State
             }
 
             input.FieldErrors.Add(new PackingFieldValidationError(model, fieldName, $"{rowLabel}: поле \"{fieldLabel}\" должно быть целым числом больше 0."));
+
             return null;
         }
     }
@@ -102,13 +106,9 @@ namespace CromulentBisgetti.DemoApp.State
     internal sealed class PackingInput
     {
         public List<Container> Containers { get; } = [];
-
         public List<Item> ItemsToPack { get; } = [];
-
         public List<string> SummaryErrors { get; } = [];
-
         public List<PackingFieldValidationError> FieldErrors { get; } = [];
-
         public bool IsValid => SummaryErrors.Count == 0 && FieldErrors.Count == 0;
     }
 }

@@ -18,7 +18,7 @@
         /// <value>
         /// The container height.
         /// </value>
-        public decimal Height { get; set; } = height;
+        public decimal Height { get; } = height;
 
         /// <summary>
         /// Gets or sets the container ID.
@@ -26,7 +26,7 @@
         /// <value>
         /// The container ID.
         /// </value>
-        public int ID { get; set; } = id;
+        public int ID { get; } = id;
 
         /// <summary>
         /// Gets or sets the container length.
@@ -34,7 +34,7 @@
         /// <value>
         /// The container length.
         /// </value>
-        public decimal Length { get; set; } = length;
+        public decimal Length { get; } = length;
 
         /// <summary>
         /// Gets or sets the volume of the container.
@@ -42,7 +42,7 @@
         /// <value>
         /// The volume of the container.
         /// </value>
-        public decimal Volume { get; set; } = length * width * height;
+        public decimal Volume { get; } = length * width * height;
 
         /// <summary>
         /// Gets or sets the container width.
@@ -50,6 +50,6 @@
         /// <value>
         /// The container width.
         /// </value>
-        public decimal Width { get; set; } = width;
+        public decimal Width { get; } = width;
     }
 }

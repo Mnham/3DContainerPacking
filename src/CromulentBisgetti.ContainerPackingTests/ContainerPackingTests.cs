@@ -8,12 +8,12 @@ namespace CromulentBisgetti.ContainerPackingTests
     [TestClass]
     public class ContainerPackingReferenceTests
     {
-        private const int ReferenceTestCount = 700;
+        private const int _referenceTestCount = 700;
 
         [TestMethod]
         public void EB_AFIT_improved_Packs_700_Reference_Cases_Consistently()
         {
-            List<ReferenceCase> referenceCases = LoadReferenceCases(ReferenceTestCount);
+            List<ReferenceCase> referenceCases = LoadReferenceCases(_referenceTestCount);
 
             Parallel.ForEach(
                 referenceCases,
@@ -106,24 +106,16 @@ namespace CromulentBisgetti.ContainerPackingTests
         private static int ParseInt(string value) =>
             int.Parse(value, CultureInfo.InvariantCulture);
 
-        private sealed class ReferenceCase
+        private sealed class ReferenceCase(
+            int number,
+            Container container,
+            List<Item> itemsToPack,
+            int expectedTotalItems)
         {
-            public int Number { get; }
-            public Container Container { get; }
-            public List<Item> ItemsToPack { get; }
-            public int ExpectedTotalItems { get; }
-
-            public ReferenceCase(
-                int number,
-                Container container,
-                List<Item> itemsToPack,
-                int expectedTotalItems)
-            {
-                Number = number;
-                Container = container;
-                ItemsToPack = itemsToPack;
-                ExpectedTotalItems = expectedTotalItems;
-            }
+            public int Number { get; } = number;
+            public Container Container { get; } = container;
+            public List<Item> ItemsToPack { get; } = itemsToPack;
+            public int ExpectedTotalItems { get; } = expectedTotalItems;
         }
     }
 }
