@@ -1,19 +1,41 @@
-﻿using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.Hosting;
+﻿var builder = WebApplication.CreateBuilder(args);
 
-namespace CromulentBisgetti.DemoApp
+builder.Services.Configure<CookiePolicyOptions>(options =>
 {
-    public class Program
+    // This lambda determines whether user consent for non-essential cookies is needed for a given request.
+    options.CheckConsentNeeded = _ => true;
+    options.MinimumSameSitePolicy = SameSiteMode.None;
+});
+
+builder.Services.AddControllersWithViews()
+    .AddJsonOptions(options =>
     {
-        #region Public Methods
+        options.JsonSerializerOptions.PropertyNamingPolicy = null;
+        options.JsonSerializerOptions.DictionaryKeyPolicy = null;
+    });
 
-        public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
-                .UseStartup<Startup>();
+var app = builder.Build();
 
-        public static void Main(string[] args) =>
-                    CreateWebHostBuilder(args).Build().Run();
-
-        #endregion Public Methods
-    }
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
 }
+else
+{
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseCookiePolicy();
+
+app.UseRouting();
+
+app.MapControllers();
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.Run();

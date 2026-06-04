@@ -8,10 +8,10 @@ namespace CromulentBisgetti.DemoApp.Models
     {
         #region Public Properties
 
-        public List<int> AlgorithmTypeIDs { get; set; }
-        public List<Container> Containers { get; set; }
+        public List<int> AlgorithmTypeIDs { get; set; } = new List<int>();
+        public List<Container> Containers { get; set; } = new List<Container>();
 
-        public List<Item> ItemsToPack { get; set; }
+        public List<Item> ItemsToPack { get; set; } = new List<Item>();
 
         #endregion Public Properties
     }

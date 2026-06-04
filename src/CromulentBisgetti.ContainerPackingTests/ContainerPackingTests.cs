@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
-using System.Threading;
+using System.Threading.Tasks;
 using CromulentBisgetti.ContainerPacking;
 using CromulentBisgetti.ContainerPacking.Algorithms;
 using CromulentBisgetti.ContainerPacking.Entities;
@@ -14,14 +14,61 @@ namespace CromulentBisgetti.ContainerPackingTests
     [TestClass]
     public class ContainerPackingTests
     {
+        private const int ReferenceTestCount = 700;
+
         [TestMethod]
         public void EB_AFIT_Passes_700_Standard_Reference_Tests()
         {
-            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+            List<ReferenceCase> referenceCases = LoadReferenceCases(ReferenceTestCount);
 
+            Parallel.ForEach(
+                referenceCases,
+                new ParallelOptions { MaxDegreeOfParallelism = Math.Max(1, Environment.ProcessorCount) },
+                AssertReferenceCase);
+        }
+
+        private static void AssertReferenceCase(ReferenceCase referenceCase)
+        {
+            List<ContainerPackingResult> result = PackingService.Pack(
+                new List<Container> { referenceCase.Container },
+                referenceCase.ItemsToPack,
+                new List<int> { (int)AlgorithmType.EB_AFIT });
+
+            AlgorithmPackingResult packingResult = result[0].AlgorithmPackingResults[0];
+
+            // Assert that the number of items we tried to pack equals the number stated in the published reference.
+            Assert.AreEqual(
+                referenceCase.ExpectedTotalItems,
+                packingResult.PackedItems.Count + packingResult.UnpackedItems.Count,
+                $"Case {referenceCase.Number}: total item count mismatch.");
+
+            // Assert that the number of items successfully packed equals the number stated in the published reference.
+            Assert.AreEqual(
+                referenceCase.ExpectedPackedItems,
+                packingResult.PackedItems.Count,
+                $"Case {referenceCase.Number}: packed item count mismatch.");
+
+            // Assert that the packed container volume percentage is equal to the published reference result.
+            // Make an exception for a couple of tests where this algorithm yields 87.20% and the published result
+            // was 87.21% (acceptable rounding error).
+            Assert.IsTrue(
+                packingResult.PercentContainerVolumePacked == referenceCase.ExpectedContainerVolumePacked
+                    || (packingResult.PercentContainerVolumePacked == 87.20M && referenceCase.ExpectedContainerVolumePacked == 87.21M),
+                $"Case {referenceCase.Number}: packed container volume percentage mismatch.");
+
+            // Assert that the packed item volume percentage is equal to the published reference result.
+            Assert.AreEqual(
+                referenceCase.ExpectedItemVolumePacked,
+                packingResult.PercentItemVolumePacked,
+                $"Case {referenceCase.Number}: packed item volume percentage mismatch.");
+        }
+
+        private static List<ReferenceCase> LoadReferenceCases(int maxCases)
+        {
             // ORLibrary.txt is an Embedded Resource in this project.
             const string resourceName = "CromulentBisgetti.ContainerPackingTests.DataFiles.ORLibrary.txt";
             Assembly assembly = Assembly.GetExecutingAssembly();
+            var referenceCases = new List<ReferenceCase>();
 
             using (Stream stream = assembly.GetManifestResourceStream(resourceName))
             using (var reader = new StreamReader(stream))
@@ -29,52 +76,87 @@ namespace CromulentBisgetti.ContainerPackingTests
                 // Counter to control how many tests are run in dev.
                 for (
                 // Counter to control how many tests are run in dev.
-                int counter = 1; reader.ReadLine() != null && counter <= 700; counter++)
+                int counter = 1; reader.ReadLine() != null && counter <= maxCases; counter++)
                 {
                     var itemsToPack = new List<Item>();
 
                     // First line in each test case is an ID. Skip it.
 
                     // Second line states the results of the test, as reported in the EB-AFIT master's thesis, appendix E.
-                    string[] testResults = reader.ReadLine().Split(' ');
+                    string[] testResults = SplitLine(reader);
 
                     // Third line defines the container dimensions.
-                    string[] containerDims = reader.ReadLine().Split(' ');
+                    string[] containerDims = SplitLine(reader);
 
                     // Fourth line states how many distinct item types we are packing.
-                    int itemTypeCount = Convert.ToInt32(reader.ReadLine());
+                    int itemTypeCount = ParseInt(reader.ReadLine());
 
                     for (int i = 0; i < itemTypeCount; i++)
                     {
-                        string[] itemArray = reader.ReadLine().Split(' ');
+                        string[] itemArray = SplitLine(reader);
 
-                        var item = new Item(0, Convert.ToDecimal(itemArray[1]), Convert.ToDecimal(itemArray[3]), Convert.ToDecimal(itemArray[5]), Convert.ToInt32(itemArray[7]));
+                        var item = new Item(0, ParseDecimal(itemArray[1]), ParseDecimal(itemArray[3]), ParseDecimal(itemArray[5]), ParseInt(itemArray[7]));
                         itemsToPack.Add(item);
                     }
 
-                    var containers = new List<Container>
-                        {
-                            new Container(0, Convert.ToDecimal(containerDims[0]), Convert.ToDecimal(containerDims[1]), Convert.ToDecimal(containerDims[2]))
-                        };
+                    var container = new Container(0, ParseDecimal(containerDims[0]), ParseDecimal(containerDims[1]), ParseDecimal(containerDims[2]));
 
-                    List<ContainerPackingResult> result = PackingService.Pack(containers, itemsToPack, new List<int> { (int)AlgorithmType.EB_AFIT });
-
-                    // Assert that the number of items we tried to pack equals the number stated in the published reference.
-                    Assert.AreEqual(result[0].AlgorithmPackingResults[0].PackedItems.Count + result[0].AlgorithmPackingResults[0].UnpackedItems.Count, Convert.ToDecimal(testResults[1]));
-
-                    // Assert that the number of items successfully packed equals the number stated in the published reference.
-                    Assert.AreEqual(result[0].AlgorithmPackingResults[0].PackedItems.Count, Convert.ToDecimal(testResults[2]));
-
-                    // Assert that the packed container volume percentage is equal to the published reference result.
-                    // Make an exception for a couple of tests where this algorithm yields 87.20% and the published result
-                    // was 87.21% (acceptable rounding error).
-                    Assert.IsTrue(result[0].AlgorithmPackingResults[0].PercentContainerVolumePacked == Convert.ToDecimal(testResults[3])
-                        || (result[0].AlgorithmPackingResults[0].PercentContainerVolumePacked == 87.20M && Convert.ToDecimal(testResults[3]) == 87.21M));
-
-                    // Assert that the packed item volume percentage is equal to the published reference result.
-                    Assert.AreEqual(result[0].AlgorithmPackingResults[0].PercentItemVolumePacked, Convert.ToDecimal(testResults[4]));
+                    referenceCases.Add(new ReferenceCase(
+                        counter,
+                        container,
+                        itemsToPack,
+                        ParseInt(testResults[1]),
+                        ParseInt(testResults[2]),
+                        ParseDecimal(testResults[3]),
+                        ParseDecimal(testResults[4])));
                 }
             }
+
+            return referenceCases;
+        }
+
+        private static string[] SplitLine(StreamReader reader) =>
+            reader.ReadLine().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        private static decimal ParseDecimal(string value) =>
+            decimal.Parse(value, CultureInfo.InvariantCulture);
+
+        private static int ParseInt(string value) =>
+            int.Parse(value, CultureInfo.InvariantCulture);
+
+        private sealed class ReferenceCase
+        {
+            public ReferenceCase(
+                int number,
+                Container container,
+                List<Item> itemsToPack,
+                int expectedTotalItems,
+                int expectedPackedItems,
+                decimal expectedContainerVolumePacked,
+                decimal expectedItemVolumePacked)
+            {
+                Number = number;
+                Container = container;
+                ItemsToPack = itemsToPack;
+                ExpectedTotalItems = expectedTotalItems;
+                ExpectedPackedItems = expectedPackedItems;
+                ExpectedContainerVolumePacked = expectedContainerVolumePacked;
+                ExpectedItemVolumePacked = expectedItemVolumePacked;
+            }
+
+            public int Number { get; }
+
+            public Container Container { get; }
+
+            public List<Item> ItemsToPack { get; }
+
+            public int ExpectedTotalItems { get; }
+
+            public int ExpectedPackedItems { get; }
+
+            public decimal ExpectedContainerVolumePacked { get; }
+
+            public decimal ExpectedItemVolumePacked { get; }
         }
     }
 }

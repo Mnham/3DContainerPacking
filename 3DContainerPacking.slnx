@@ -1,5 +1,5 @@
 <Solution>
-  <Project Path="../Faryma.Composer/backend/tests/Faryma.Composer.Application.Test/Faryma.Composer.Application.Test.csproj" />
   <Project Path="src/CromulentBisgetti.ContainerPacking/CromulentBisgetti.ContainerPacking.csproj" />
+  <Project Path="src/CromulentBisgetti.ContainerPackingTests/CromulentBisgetti.ContainerPackingTests.csproj" />
   <Project Path="src/CromulentBisgetti.DemoApp/CromulentBisgetti.DemoApp.csproj" />
 </Solution>
