@@ -1,0 +1,83 @@
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+<div id="renderModal" class="modal fade" tabindex="-1" aria-labelledby="renderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="renderModalLabel" class="modal-title h5">Визуализация упаковки</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body d-flex flex-column text-center p-2">
+                <div id="drawing-container"></div>
+                <div class="mt-2">
+                    <button id="unpack-render-item" type="button" class="btn btn-outline-secondary" disabled>Назад</button>
+                    <button id="pack-render-item" type="button" class="btn btn-outline-secondary" disabled>Вперёд</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private IJSObjectReference? module;
+
+    public async Task ShowAsync(PackingContainerFormModel container, AlgorithmPackingResult result)
+    {
+        module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/container-packing/blazor-packing-viewer.js");
+        await module.InvokeVoidAsync("openPackingView", CreateVisualizationContainer(container, result));
+    }
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        if (module is not null)
+        {
+            await module.DisposeAsync();
+        }
+    }
+
+    private static PackingVisualizationContainer CreateVisualizationContainer(PackingContainerFormModel container, AlgorithmPackingResult result) =>
+        new(
+            container.Length.GetValueOrDefault(),
+            container.Width.GetValueOrDefault(),
+            container.Height.GetValueOrDefault(),
+            CreateVisualizationResult(result));
+
+    private static PackingVisualizationResult CreateVisualizationResult(AlgorithmPackingResult result) =>
+        new(
+            result.PackTimeInMilliseconds,
+            result.PercentContainerVolumePacked,
+            CreateVisualizationItems(result.PackedItems),
+            CreateVisualizationItems(result.UnpackedItems));
+
+    private static IReadOnlyList<PackingVisualizationItem> CreateVisualizationItems(IEnumerable<Item>? items) =>
+        items?.Select(item => new PackingVisualizationItem(
+            item.ID,
+            item.CoordX,
+            item.CoordY,
+            item.CoordZ,
+            item.PackDimX,
+            item.PackDimY,
+            item.PackDimZ)).ToList() ?? [];
+
+    private sealed record PackingVisualizationContainer(
+        decimal Length,
+        decimal Width,
+        decimal Height,
+        PackingVisualizationResult PackingResult);
+
+    private sealed record PackingVisualizationResult(
+        long PackTimeInMilliseconds,
+        decimal PercentContainerVolumePacked,
+        IReadOnlyList<PackingVisualizationItem> PackedItems,
+        IReadOnlyList<PackingVisualizationItem> UnpackedItems);
+
+    private sealed record PackingVisualizationItem(
+        int ID,
+        decimal CoordX,
+        decimal CoordY,
+        decimal CoordZ,
+        decimal PackDimX,
+        decimal PackDimY,
+        decimal PackDimZ);
+}

@@ -3,7 +3,14 @@
     /// <summary>
     /// The container to pack items into.
     /// </summary>
-    public sealed class Container
+    /// <remarks>
+    /// Initializes a new instance of the Container class.
+    /// </remarks>
+    /// <param name="id">The container ID.</param>
+    /// <param name="length">The container length.</param>
+    /// <param name="width">The container width.</param>
+    /// <param name="height">The container height.</param>
+    public sealed class Container(int id, decimal length, decimal width, decimal height)
     {
         /// <summary>
         /// Gets or sets the container height.
@@ -11,7 +18,7 @@
         /// <value>
         /// The container height.
         /// </value>
-        public decimal Height { get; set; }
+        public decimal Height { get; set; } = height;
 
         /// <summary>
         /// Gets or sets the container ID.
@@ -19,7 +26,7 @@
         /// <value>
         /// The container ID.
         /// </value>
-        public int ID { get; set; }
+        public int ID { get; set; } = id;
 
         /// <summary>
         /// Gets or sets the container length.
@@ -27,7 +34,7 @@
         /// <value>
         /// The container length.
         /// </value>
-        public decimal Length { get; set; }
+        public decimal Length { get; set; } = length;
 
         /// <summary>
         /// Gets or sets the volume of the container.
@@ -35,7 +42,7 @@
         /// <value>
         /// The volume of the container.
         /// </value>
-        public decimal Volume { get; set; }
+        public decimal Volume { get; set; } = length * width * height;
 
         /// <summary>
         /// Gets or sets the container width.
@@ -43,22 +50,6 @@
         /// <value>
         /// The container width.
         /// </value>
-        public decimal Width { get; set; }
-
-        /// <summary>
-        /// Initializes a new instance of the Container class.
-        /// </summary>
-        /// <param name="id">The container ID.</param>
-        /// <param name="length">The container length.</param>
-        /// <param name="width">The container width.</param>
-        /// <param name="height">The container height.</param>
-        public Container(int id, decimal length, decimal width, decimal height)
-        {
-            ID = id;
-            Length = length;
-            Width = width;
-            Height = height;
-            Volume = length * width * height;
-        }
+        public decimal Width { get; set; } = width;
     }
 }

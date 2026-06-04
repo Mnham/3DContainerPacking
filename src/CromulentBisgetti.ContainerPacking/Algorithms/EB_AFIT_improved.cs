@@ -2,95 +2,87 @@
 
 namespace CromulentBisgetti.ContainerPacking.Algorithms
 {
-    public class EB_AFIT_improved : IPackingAlgorithm
+    public sealed class EB_AFIT_improved
     {
-        protected readonly List<Item> itemsToPack = new() { new Item() };
-        protected int bboxi;
-        protected int boxi;
-        protected int cboxi;
-        protected int bestVariant;
-        protected int containerOrientation;
-        protected bool hundredPercentPacked;
-        protected decimal itemsToPackCount;
-        protected bool layerDone;
-        protected decimal layerThickness;
-        protected decimal packedVolume;
-        protected decimal packedy;
-        protected bool packingBest;
-        protected decimal px;
-        protected decimal py;
-        protected decimal pz;
-        protected decimal remainpy;
-        protected decimal remainpz;
-        protected Dictionary<int, Item> sourceDictionaryItems;
-        protected List<Item> sourceItems;
-
-        private readonly List<Item> itemsPackedInOrder = new();
-        private readonly ScrapPad scrapfirst = new();
-        private decimal bbfx;
-        private decimal bbfy;
-        private decimal bbfz;
-        private decimal bboxx;
-        private decimal bboxy;
-        private decimal bboxz;
-        private int bestIteration;
-        private decimal bfx;
-        private decimal bfy;
-        private decimal bfz;
-        private decimal boxx;
-        private decimal boxy;
-        private decimal boxz;
-        private decimal cboxx;
-        private decimal cboxy;
-        private decimal cboxz;
-        private decimal containerVolume;
-        private bool evened;
-        private decimal layerInLayer;
-        private List<Layer> layers = new();
-        private decimal lilz;
-        private bool packing;
-        private decimal prelayer;
-        private decimal prepackedy;
-        private decimal preremainpy;
-        private ScrapPad smallestZ;
-        private decimal totalItemsVolume;
-
-        protected virtual AlgorithmType AlgorithmType => AlgorithmType.EB_AFIT_improved;
+        private readonly List<Item> _itemsToPack = new() { new Item() };
+        private readonly List<Item> _itemsPackedInOrder = new();
+        private readonly ScrapPad _scrapfirst = new();
+        private int _bboxi;
+        private int _boxi;
+        private int _cboxi;
+        private int _bestVariant;
+        private bool _hundredPercentPacked;
+        private decimal _itemsToPackCount;
+        private bool _layerDone;
+        private decimal _layerThickness;
+        private decimal _packedVolume;
+        private decimal _packedy;
+        private bool _packingBest;
+        private decimal _px;
+        private decimal _py;
+        private decimal _pz;
+        private decimal _remainpy;
+        private decimal _remainpz;
+        private Dictionary<int, Item> _sourceDictionaryItems;
+        private List<Item> _sourceItems;
+        private decimal _bbfx;
+        private decimal _bbfy;
+        private decimal _bbfz;
+        private decimal _bboxx;
+        private decimal _bboxy;
+        private decimal _bboxz;
+        private int _bestIteration;
+        private decimal _bfx;
+        private decimal _bfy;
+        private decimal _bfz;
+        private decimal _boxx;
+        private decimal _boxy;
+        private decimal _boxz;
+        private decimal _cboxx;
+        private decimal _cboxy;
+        private decimal _cboxz;
+        private decimal _containerVolume;
+        private bool _evened;
+        private decimal _layerInLayer;
+        private List<Layer> _layers = new();
+        private decimal _lilz;
+        private bool _packing;
+        private decimal _prelayer;
+        private decimal _prepackedy;
+        private decimal _preremainpy;
+        private ScrapPad _smallestZ;
+        private decimal _totalItemsVolume;
 
         public AlgorithmPackingResult Run(Container container, List<Item> items)
         {
-            containerVolume = container.Volume;
-            sourceItems = items.Where(i => i.Quantity > 0).OrderBy(i => i.Volume).ToList();
-            for (int i = 0; i < sourceItems.Count; i++)
+            _containerVolume = container.Volume;
+            _sourceItems = items.Where(i => i.Quantity > 0).OrderBy(i => i.Volume).ToList();
+            for (int i = 0; i < _sourceItems.Count; i++)
             {
-                sourceItems[i].ID = i;
+                _sourceItems[i].ID = i;
             }
 
             Initialize();
             ExecuteIterations(container);
             Report(container);
-            var result = new AlgorithmPackingResult
-            {
-                AlgorithmID = (int)AlgorithmType,
-                AlgorithmName = AlgorithmType.ToString(),
-            };
+            var result = new AlgorithmPackingResult();
 
-            for (int i = 1; i <= itemsToPackCount; i++)
+            for (int i = 1; i <= _itemsToPackCount; i++)
             {
-                itemsToPack[i].Quantity = 1;
-                if (!itemsToPack[i].IsPacked)
+                _itemsToPack[i].Quantity = 1;
+                if (!_itemsToPack[i].IsPacked)
                 {
-                    result.UnpackedItems.Add(itemsToPack[i]);
+                    result.UnpackedItems.Add(_itemsToPack[i]);
                 }
             }
 
-            result.PackedItems = itemsPackedInOrder;
+            result.PackedItems = _itemsPackedInOrder;
             result.IsCompletePack = result.UnpackedItems.Count == 0;
 
             return result;
         }
 
-        protected virtual void AnalyzeBoxOrientation(Action<decimal, decimal, decimal> analyzeBox, Item item)
+        private void AnalyzeBoxOrientation(Action<decimal, decimal, decimal> analyzeBox, Item item)
         {
             analyzeBox(item.Dim1, item.Dim2, item.Dim3);
             if (item.Dim1 == item.Dim3 && item.Dim3 == item.Dim2)
@@ -105,104 +97,103 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
             analyzeBox(item.Dim3, item.Dim2, item.Dim1);
         }
 
-        protected virtual void ExecuteIterations(Container container)
+        private void ExecuteIterations(Container container)
         {
             decimal bestVolume = 0;
             for (int containerOrientationVariant = 1; containerOrientationVariant <= 6; containerOrientationVariant++)
             {
-                containerOrientation = containerOrientationVariant;
                 switch (containerOrientationVariant)
                 {
                     case 1:
-                        px = container.Length;
-                        py = container.Height;
-                        pz = container.Width;
+                        _px = container.Length;
+                        _py = container.Height;
+                        _pz = container.Width;
                         break;
 
                     case 2:
-                        px = container.Width;
-                        py = container.Height;
-                        pz = container.Length;
+                        _px = container.Width;
+                        _py = container.Height;
+                        _pz = container.Length;
                         break;
 
                     case 3:
-                        px = container.Width;
-                        py = container.Length;
-                        pz = container.Height;
+                        _px = container.Width;
+                        _py = container.Length;
+                        _pz = container.Height;
                         break;
 
                     case 4:
-                        px = container.Height;
-                        py = container.Length;
-                        pz = container.Width;
+                        _px = container.Height;
+                        _py = container.Length;
+                        _pz = container.Width;
                         break;
 
                     case 5:
-                        px = container.Length;
-                        py = container.Width;
-                        pz = container.Height;
+                        _px = container.Length;
+                        _py = container.Width;
+                        _pz = container.Height;
                         break;
 
                     case 6:
-                        px = container.Height;
-                        py = container.Width;
-                        pz = container.Length;
+                        _px = container.Height;
+                        _py = container.Width;
+                        _pz = container.Length;
                         break;
                 }
 
-                layers = GetLayers();
-                for (int layersIndex = 1; layersIndex < layers.Count; layersIndex++)
+                _layers = GetLayers();
+                for (int layersIndex = 1; layersIndex < _layers.Count; layersIndex++)
                 {
-                    packedVolume = packedy = 0;
-                    packing = true;
-                    layerThickness = layers[layersIndex].LayerDim;
-                    remainpy = py;
-                    remainpz = pz;
-                    for (int i = 1; i <= itemsToPackCount; i++)
+                    _packedVolume = _packedy = 0;
+                    _packing = true;
+                    _layerThickness = _layers[layersIndex].LayerDim;
+                    _remainpy = _py;
+                    _remainpz = _pz;
+                    for (int i = 1; i <= _itemsToPackCount; i++)
                     {
-                        itemsToPack[i].IsPacked = false;
+                        _itemsToPack[i].IsPacked = false;
                     }
 
-                    sourceDictionaryItems = sourceItems.ToDictionary(i => i.ID, i => new Item(i));
+                    _sourceDictionaryItems = _sourceItems.ToDictionary(i => i.ID, i => new Item(i));
                     do
                     {
-                        layerInLayer = 0;
-                        layerDone = false;
+                        _layerInLayer = 0;
+                        _layerDone = false;
                         PackLayer();
-                        packedy += layerThickness;
-                        remainpy = py - packedy;
-                        if (layerInLayer != 0)
+                        _packedy += _layerThickness;
+                        _remainpy = _py - _packedy;
+                        if (_layerInLayer != 0)
                         {
-                            prepackedy = packedy;
-                            preremainpy = remainpy;
-                            remainpy = layerThickness - prelayer;
-                            packedy = packedy - layerThickness + prelayer;
-                            remainpz = lilz;
-                            layerThickness = layerInLayer;
-                            layerDone = false;
+                            _prepackedy = _packedy;
+                            _preremainpy = _remainpy;
+                            _remainpy = _layerThickness - _prelayer;
+                            _packedy = _packedy - _layerThickness + _prelayer;
+                            _remainpz = _lilz;
+                            _layerThickness = _layerInLayer;
+                            _layerDone = false;
                             PackLayer();
-                            packedy = prepackedy;
-                            remainpy = preremainpy;
-                            remainpz = pz;
+                            _packedy = _prepackedy;
+                            _remainpy = _preremainpy;
+                            _remainpz = _pz;
                         }
 
-                        FindLayer(remainpy);
-                    } while (packing);
+                        FindLayer(_remainpy);
+                    } while (_packing);
 
-                    if (bestVolume < packedVolume)
+                    if (bestVolume < _packedVolume)
                     {
-                        bestVolume = packedVolume;
-                        bestVariant = containerOrientationVariant;
-                        bestIteration = layersIndex;
+                        bestVolume = _packedVolume;
+                        _bestVariant = containerOrientationVariant;
+                        _bestIteration = layersIndex;
                     }
 
-                    if (hundredPercentPacked)
+                    if (_hundredPercentPacked)
                     {
                         break;
                     }
                 }
 
-                if (hundredPercentPacked)
+                if (_hundredPercentPacked)
                 {
                     break;
                 }
@@ -214,307 +205,307 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
             }
         }
 
-        protected void PackLayer()
+        private void PackLayer()
         {
             decimal len_X;
             decimal len_Z;
             decimal lp_Z;
-            if (layerThickness == 0)
+            if (_layerThickness == 0)
             {
-                packing = false;
+                _packing = false;
                 return;
             }
 
-            scrapfirst.CumX = px;
-            scrapfirst.CumZ = 0;
+            _scrapfirst.CumX = _px;
+            _scrapfirst.CumZ = 0;
             while (true)
             {
                 FindSmallestZ();
-                if ((smallestZ.Pre == null) && (smallestZ.Post == null))
+                if ((_smallestZ.Pre == null) && (_smallestZ.Post == null))
                 {
                     //*** SITUATION-1: NO BOXES ON THE RIGHT AND LEFT SIDES ***
-                    len_X = smallestZ.CumX;
-                    lp_Z = remainpz - smallestZ.CumZ;
+                    len_X = _smallestZ.CumX;
+                    lp_Z = _remainpz - _smallestZ.CumZ;
                     FindBox(len_X, lp_Z, lp_Z);
                     CheckFound();
-                    if (layerDone)
+                    if (_layerDone)
                     {
                         break;
                     }
 
-                    if (evened)
+                    if (_evened)
                     {
                         continue;
                     }
 
-                    itemsToPack[cboxi].CoordX = 0;
-                    itemsToPack[cboxi].CoordY = packedy;
-                    itemsToPack[cboxi].CoordZ = smallestZ.CumZ;
-                    if (cboxx == smallestZ.CumX)
+                    _itemsToPack[_cboxi].CoordX = 0;
+                    _itemsToPack[_cboxi].CoordY = _packedy;
+                    _itemsToPack[_cboxi].CoordZ = _smallestZ.CumZ;
+                    if (_cboxx == _smallestZ.CumX)
                     {
-                        smallestZ.CumZ += cboxz;
+                        _smallestZ.CumZ += _cboxz;
                     }
                     else
                     {
-                        smallestZ.Post = new ScrapPad
+                        _smallestZ.Post = new ScrapPad
                         {
                             Post = null,
-                            Pre = smallestZ,
-                            CumX = smallestZ.CumX,
-                            CumZ = smallestZ.CumZ
+                            Pre = _smallestZ,
+                            CumX = _smallestZ.CumX,
+                            CumZ = _smallestZ.CumZ
                         };
-                        smallestZ.CumX = cboxx;
-                        smallestZ.CumZ += cboxz;
+                        _smallestZ.CumX = _cboxx;
+                        _smallestZ.CumZ += _cboxz;
                     }
                 }
-                else if (smallestZ.Pre == null)
+                else if (_smallestZ.Pre == null)
                 {
                     //*** SITUATION-2: NO BOXES ON THE LEFT SIDE ***
-                    len_X = smallestZ.CumX;
-                    len_Z = smallestZ.Post.CumZ - smallestZ.CumZ;
-                    lp_Z = remainpz - smallestZ.CumZ;
+                    len_X = _smallestZ.CumX;
+                    len_Z = _smallestZ.Post.CumZ - _smallestZ.CumZ;
+                    lp_Z = _remainpz - _smallestZ.CumZ;
                     FindBox(len_X, len_Z, lp_Z);
                     CheckFound();
-                    if (layerDone)
+                    if (_layerDone)
                     {
                         break;
                     }
 
-                    if (evened)
+                    if (_evened)
                     {
                         continue;
                     }
 
-                    itemsToPack[cboxi].CoordY = packedy;
-                    itemsToPack[cboxi].CoordZ = smallestZ.CumZ;
-                    if (cboxx == smallestZ.CumX)
+                    _itemsToPack[_cboxi].CoordY = _packedy;
+                    _itemsToPack[_cboxi].CoordZ = _smallestZ.CumZ;
+                    if (_cboxx == _smallestZ.CumX)
                     {
-                        itemsToPack[cboxi].CoordX = 0;
+                        _itemsToPack[_cboxi].CoordX = 0;
 
-                        if (smallestZ.CumZ + cboxz == smallestZ.Post.CumZ)
+                        if (_smallestZ.CumZ + _cboxz == _smallestZ.Post.CumZ)
                         {
-                            smallestZ.CumZ = smallestZ.Post.CumZ;
-                            smallestZ.CumX = smallestZ.Post.CumX;
-                            smallestZ.Post = smallestZ.Post.Post;
-                            smallestZ.Post?.Pre = smallestZ;
+                            _smallestZ.CumZ = _smallestZ.Post.CumZ;
+                            _smallestZ.CumX = _smallestZ.Post.CumX;
+                            _smallestZ.Post = _smallestZ.Post.Post;
+                            _smallestZ.Post?.Pre = _smallestZ;
                         }
                         else
                         {
-                            smallestZ.CumZ += cboxz;
+                            _smallestZ.CumZ += _cboxz;
                         }
                     }
                     else
                     {
-                        itemsToPack[cboxi].CoordX = smallestZ.CumX - cboxx;
-                        if (smallestZ.CumZ + cboxz == smallestZ.Post.CumZ)
+                        _itemsToPack[_cboxi].CoordX = _smallestZ.CumX - _cboxx;
+                        if (_smallestZ.CumZ + _cboxz == _smallestZ.Post.CumZ)
                         {
-                            smallestZ.CumX -= cboxx;
+                            _smallestZ.CumX -= _cboxx;
                         }
                         else
                         {
-                            smallestZ.Post.Pre = new ScrapPad
+                            _smallestZ.Post.Pre = new ScrapPad
                             {
-                                Post = smallestZ.Post,
-                                Pre = smallestZ
+                                Post = _smallestZ.Post,
+                                Pre = _smallestZ
                             };
-                            smallestZ.Post = smallestZ.Post.Pre;
-                            smallestZ.Post.CumX = smallestZ.CumX;
-                            smallestZ.CumX -= cboxx;
-                            smallestZ.Post.CumZ = smallestZ.CumZ + cboxz;
+                            _smallestZ.Post = _smallestZ.Post.Pre;
+                            _smallestZ.Post.CumX = _smallestZ.CumX;
+                            _smallestZ.CumX -= _cboxx;
+                            _smallestZ.Post.CumZ = _smallestZ.CumZ + _cboxz;
                         }
                     }
                 }
-                else if (smallestZ.Post == null)
+                else if (_smallestZ.Post == null)
                 {
                     //*** SITUATION-3: NO BOXES ON THE RIGHT SIDE ***
-                    len_X = smallestZ.CumX - smallestZ.Pre.CumX;
-                    len_Z = smallestZ.Pre.CumZ - smallestZ.CumZ;
-                    lp_Z = remainpz - smallestZ.CumZ;
+                    len_X = _smallestZ.CumX - _smallestZ.Pre.CumX;
+                    len_Z = _smallestZ.Pre.CumZ - _smallestZ.CumZ;
+                    lp_Z = _remainpz - _smallestZ.CumZ;
                     FindBox(len_X, len_Z, lp_Z);
                     CheckFound();
-                    if (layerDone)
+                    if (_layerDone)
                     {
                         break;
                     }
 
-                    if (evened)
+                    if (_evened)
                     {
                         continue;
                     }
 
-                    itemsToPack[cboxi].CoordY = packedy;
-                    itemsToPack[cboxi].CoordZ = smallestZ.CumZ;
-                    itemsToPack[cboxi].CoordX = smallestZ.Pre.CumX;
-                    if (cboxx == smallestZ.CumX - smallestZ.Pre.CumX)
+                    _itemsToPack[_cboxi].CoordY = _packedy;
+                    _itemsToPack[_cboxi].CoordZ = _smallestZ.CumZ;
+                    _itemsToPack[_cboxi].CoordX = _smallestZ.Pre.CumX;
+                    if (_cboxx == _smallestZ.CumX - _smallestZ.Pre.CumX)
                     {
-                        if (smallestZ.CumZ + cboxz == smallestZ.Pre.CumZ)
+                        if (_smallestZ.CumZ + _cboxz == _smallestZ.Pre.CumZ)
                         {
-                            smallestZ.Pre.CumX = smallestZ.CumX;
-                            smallestZ.Pre.Post = null;
+                            _smallestZ.Pre.CumX = _smallestZ.CumX;
+                            _smallestZ.Pre.Post = null;
                         }
                         else
                         {
-                            smallestZ.CumZ += cboxz;
+                            _smallestZ.CumZ += _cboxz;
                         }
                     }
                     else
                     {
-                        if (smallestZ.CumZ + cboxz == smallestZ.Pre.CumZ)
+                        if (_smallestZ.CumZ + _cboxz == _smallestZ.Pre.CumZ)
                         {
-                            smallestZ.Pre.CumX += cboxx;
+                            _smallestZ.Pre.CumX += _cboxx;
                         }
                         else
                         {
-                            smallestZ.Pre.Post = new ScrapPad
+                            _smallestZ.Pre.Post = new ScrapPad
                             {
-                                Pre = smallestZ.Pre,
-                                Post = smallestZ
+                                Pre = _smallestZ.Pre,
+                                Post = _smallestZ
                             };
-                            smallestZ.Pre = smallestZ.Pre.Post;
-                            smallestZ.Pre.CumX = smallestZ.Pre.Pre.CumX + cboxx;
-                            smallestZ.Pre.CumZ = smallestZ.CumZ + cboxz;
+                            _smallestZ.Pre = _smallestZ.Pre.Post;
+                            _smallestZ.Pre.CumX = _smallestZ.Pre.Pre.CumX + _cboxx;
+                            _smallestZ.Pre.CumZ = _smallestZ.CumZ + _cboxz;
                         }
                     }
                 }
-                else if (smallestZ.Pre.CumZ == smallestZ.Post.CumZ)
+                else if (_smallestZ.Pre.CumZ == _smallestZ.Post.CumZ)
                 {
                     //*** SITUATION-4: THERE ARE BOXES ON BOTH OF THE SIDES ***
                     //*** SUBSITUATION-4A: SIDES ARE EQUAL TO EACH OTHER ***
-                    len_X = smallestZ.CumX - smallestZ.Pre.CumX;
-                    len_Z = smallestZ.Pre.CumZ - smallestZ.CumZ;
-                    lp_Z = remainpz - smallestZ.CumZ;
+                    len_X = _smallestZ.CumX - _smallestZ.Pre.CumX;
+                    len_Z = _smallestZ.Pre.CumZ - _smallestZ.CumZ;
+                    lp_Z = _remainpz - _smallestZ.CumZ;
                     FindBox(len_X, len_Z, lp_Z);
                     CheckFound();
-                    if (layerDone)
+                    if (_layerDone)
                     {
                         break;
                     }
 
-                    if (evened)
+                    if (_evened)
                     {
                         continue;
                     }
 
-                    itemsToPack[cboxi].CoordY = packedy;
-                    itemsToPack[cboxi].CoordZ = smallestZ.CumZ;
-                    if (cboxx == smallestZ.CumX - smallestZ.Pre.CumX)
+                    _itemsToPack[_cboxi].CoordY = _packedy;
+                    _itemsToPack[_cboxi].CoordZ = _smallestZ.CumZ;
+                    if (_cboxx == _smallestZ.CumX - _smallestZ.Pre.CumX)
                     {
-                        itemsToPack[cboxi].CoordX = smallestZ.Pre.CumX;
-                        if (smallestZ.CumZ + cboxz == smallestZ.Post.CumZ)
+                        _itemsToPack[_cboxi].CoordX = _smallestZ.Pre.CumX;
+                        if (_smallestZ.CumZ + _cboxz == _smallestZ.Post.CumZ)
                         {
-                            smallestZ.Pre.CumX = smallestZ.Post.CumX;
-                            if (smallestZ.Post.Post != null)
+                            _smallestZ.Pre.CumX = _smallestZ.Post.CumX;
+                            if (_smallestZ.Post.Post != null)
                             {
-                                smallestZ.Pre.Post = smallestZ.Post.Post;
-                                smallestZ.Post.Post.Pre = smallestZ.Pre;
+                                _smallestZ.Pre.Post = _smallestZ.Post.Post;
+                                _smallestZ.Post.Post.Pre = _smallestZ.Pre;
                             }
                             else
                             {
-                                smallestZ.Pre.Post = null;
+                                _smallestZ.Pre.Post = null;
                             }
                         }
                         else
                         {
-                            smallestZ.CumZ += cboxz;
+                            _smallestZ.CumZ += _cboxz;
                         }
                     }
-                    else if (smallestZ.Pre.CumX < px - smallestZ.CumX)
+                    else if (_smallestZ.Pre.CumX < _px - _smallestZ.CumX)
                     {
-                        if (smallestZ.CumZ + cboxz == smallestZ.Pre.CumZ)
+                        if (_smallestZ.CumZ + _cboxz == _smallestZ.Pre.CumZ)
                         {
-                            smallestZ.CumX -= cboxx;
-                            itemsToPack[cboxi].CoordX = smallestZ.CumX;
+                            _smallestZ.CumX -= _cboxx;
+                            _itemsToPack[_cboxi].CoordX = _smallestZ.CumX;
                         }
                         else
                         {
-                            itemsToPack[cboxi].CoordX = smallestZ.Pre.CumX;
-                            smallestZ.Pre.Post = new ScrapPad
+                            _itemsToPack[_cboxi].CoordX = _smallestZ.Pre.CumX;
+                            _smallestZ.Pre.Post = new ScrapPad
                             {
-                                Pre = smallestZ.Pre,
-                                Post = smallestZ
+                                Pre = _smallestZ.Pre,
+                                Post = _smallestZ
                             };
-                            smallestZ.Pre = smallestZ.Pre.Post;
-                            smallestZ.Pre.CumX = smallestZ.Pre.Pre.CumX + cboxx;
-                            smallestZ.Pre.CumZ = smallestZ.CumZ + cboxz;
+                            _smallestZ.Pre = _smallestZ.Pre.Post;
+                            _smallestZ.Pre.CumX = _smallestZ.Pre.Pre.CumX + _cboxx;
+                            _smallestZ.Pre.CumZ = _smallestZ.CumZ + _cboxz;
                         }
                     }
                     else
                     {
-                        if (smallestZ.CumZ + cboxz == smallestZ.Pre.CumZ)
+                        if (_smallestZ.CumZ + _cboxz == _smallestZ.Pre.CumZ)
                         {
-                            smallestZ.Pre.CumX += cboxx;
-                            itemsToPack[cboxi].CoordX = smallestZ.Pre.CumX;
+                            _smallestZ.Pre.CumX += _cboxx;
+                            _itemsToPack[_cboxi].CoordX = _smallestZ.Pre.CumX;
                         }
                         else
                         {
-                            itemsToPack[cboxi].CoordX = smallestZ.CumX - cboxx;
-                            smallestZ.Post.Pre = new ScrapPad
+                            _itemsToPack[_cboxi].CoordX = _smallestZ.CumX - _cboxx;
+                            _smallestZ.Post.Pre = new ScrapPad
                             {
-                                Post = smallestZ.Post,
-                                Pre = smallestZ
+                                Post = _smallestZ.Post,
+                                Pre = _smallestZ
                             };
-                            smallestZ.Post = smallestZ.Post.Pre;
-                            smallestZ.Post.CumX = smallestZ.CumX;
-                            smallestZ.Post.CumZ = smallestZ.CumZ + cboxz;
-                            smallestZ.CumX -= cboxx;
+                            _smallestZ.Post = _smallestZ.Post.Pre;
+                            _smallestZ.Post.CumX = _smallestZ.CumX;
+                            _smallestZ.Post.CumZ = _smallestZ.CumZ + _cboxz;
+                            _smallestZ.CumX -= _cboxx;
                         }
                     }
                 }
                 else
                 {
                     //*** SUBSITUATION-4B: SIDES ARE NOT EQUAL TO EACH OTHER ***
-                    len_X = smallestZ.CumX - smallestZ.Pre.CumX;
-                    len_Z = smallestZ.Pre.CumZ - smallestZ.CumZ;
-                    lp_Z = remainpz - smallestZ.CumZ;
+                    len_X = _smallestZ.CumX - _smallestZ.Pre.CumX;
+                    len_Z = _smallestZ.Pre.CumZ - _smallestZ.CumZ;
+                    lp_Z = _remainpz - _smallestZ.CumZ;
                     FindBox(len_X, len_Z, lp_Z);
                     CheckFound();
-                    if (layerDone)
+                    if (_layerDone)
                     {
                         break;
                     }
 
-                    if (evened)
+                    if (_evened)
                     {
                         continue;
                     }
 
-                    itemsToPack[cboxi].CoordY = packedy;
-                    itemsToPack[cboxi].CoordZ = smallestZ.CumZ;
-                    itemsToPack[cboxi].CoordX = smallestZ.Pre.CumX;
-                    if (cboxx == (smallestZ.CumX - smallestZ.Pre.CumX))
+                    _itemsToPack[_cboxi].CoordY = _packedy;
+                    _itemsToPack[_cboxi].CoordZ = _smallestZ.CumZ;
+                    _itemsToPack[_cboxi].CoordX = _smallestZ.Pre.CumX;
+                    if (_cboxx == (_smallestZ.CumX - _smallestZ.Pre.CumX))
                     {
-                        if ((smallestZ.CumZ + cboxz) == smallestZ.Pre.CumZ)
+                        if ((_smallestZ.CumZ + _cboxz) == _smallestZ.Pre.CumZ)
                         {
-                            smallestZ.Pre.CumX = smallestZ.CumX;
-                            smallestZ.Pre.Post = smallestZ.Post;
-                            smallestZ.Post.Pre = smallestZ.Pre;
+                            _smallestZ.Pre.CumX = _smallestZ.CumX;
+                            _smallestZ.Pre.Post = _smallestZ.Post;
+                            _smallestZ.Post.Pre = _smallestZ.Pre;
                         }
                         else
                         {
-                            smallestZ.CumZ += cboxz;
+                            _smallestZ.CumZ += _cboxz;
                         }
                     }
                     else
                     {
-                        if ((smallestZ.CumZ + cboxz) == smallestZ.Pre.CumZ)
+                        if ((_smallestZ.CumZ + _cboxz) == _smallestZ.Pre.CumZ)
                         {
-                            smallestZ.Pre.CumX += cboxx;
+                            _smallestZ.Pre.CumX += _cboxx;
                         }
-                        else if (smallestZ.CumZ + cboxz == smallestZ.Post.CumZ)
+                        else if (_smallestZ.CumZ + _cboxz == _smallestZ.Post.CumZ)
                         {
-                            itemsToPack[cboxi].CoordX = smallestZ.CumX - cboxx;
-                            smallestZ.CumX -= cboxx;
+                            _itemsToPack[_cboxi].CoordX = _smallestZ.CumX - _cboxx;
+                            _smallestZ.CumX -= _cboxx;
                         }
                         else
                         {
-                            smallestZ.Pre.Post = new ScrapPad
+                            _smallestZ.Pre.Post = new ScrapPad
                             {
-                                Pre = smallestZ.Pre,
-                                Post = smallestZ
+                                Pre = _smallestZ.Pre,
+                                Post = _smallestZ
                             };
-                            smallestZ.Pre = smallestZ.Pre.Post;
-                            smallestZ.Pre.CumX = smallestZ.Pre.Pre.CumX + cboxx;
-                            smallestZ.Pre.CumZ = smallestZ.CumZ + cboxz;
+                            _smallestZ.Pre = _smallestZ.Pre.Post;
+                            _smallestZ.Pre.CumX = _smallestZ.Pre.Pre.CumX + _cboxx;
+                            _smallestZ.Pre.CumZ = _smallestZ.CumZ + _cboxz;
                         }
                     }
                 }
@@ -524,13 +515,13 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
 
             void FindSmallestZ()
             {
-                ScrapPad scrapmemb = scrapfirst;
-                smallestZ = scrapmemb;
+                ScrapPad scrapmemb = _scrapfirst;
+                _smallestZ = scrapmemb;
                 while (scrapmemb.Post != null)
                 {
-                    if (scrapmemb.Post.CumZ < smallestZ.CumZ)
+                    if (scrapmemb.Post.CumZ < _smallestZ.CumZ)
                     {
-                        smallestZ = scrapmemb.Post;
+                        _smallestZ = scrapmemb.Post;
                     }
 
                     scrapmemb = scrapmemb.Post;
@@ -539,172 +530,169 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
 
             void VolumeCheck()
             {
-                sourceDictionaryItems[itemsToPack[cboxi].ID].Quantity--;
-                itemsToPack[cboxi].IsPacked = true;
-                itemsToPack[cboxi].PackDimX = cboxx;
-                itemsToPack[cboxi].PackDimY = cboxy;
-                itemsToPack[cboxi].PackDimZ = cboxz;
-                packedVolume += itemsToPack[cboxi].Volume;
+                _sourceDictionaryItems[_itemsToPack[_cboxi].ID].Quantity--;
+                _itemsToPack[_cboxi].IsPacked = true;
+                _itemsToPack[_cboxi].PackDimX = _cboxx;
+                _itemsToPack[_cboxi].PackDimY = _cboxy;
+                _itemsToPack[_cboxi].PackDimZ = _cboxz;
+                _packedVolume += _itemsToPack[_cboxi].Volume;
                 PackBehindBox();
-                if (packingBest)
+                if (_packingBest)
                 {
-                    OutputBoxList(cboxi);
+                    OutputBoxList(_cboxi);
                 }
-                else if (packedVolume == containerVolume || packedVolume == totalItemsVolume)
+                else if (_packedVolume == _containerVolume || _packedVolume == _totalItemsVolume)
                 {
-                    packing = false;
-                    hundredPercentPacked = true;
+                    _packing = false;
+                    _hundredPercentPacked = true;
                 }
             }
         }
 
-        protected virtual void Report(Container container)
+        private void Report(Container container)
         {
-            containerOrientation = bestVariant;
-            switch (bestVariant)
+            switch (_bestVariant)
             {
                 case 1:
-                    px = container.Length;
-                    py = container.Height;
-                    pz = container.Width;
+                    _px = container.Length;
+                    _py = container.Height;
+                    _pz = container.Width;
                     break;
 
                 case 2:
-                    px = container.Width;
-                    py = container.Height;
-                    pz = container.Length;
+                    _px = container.Width;
+                    _py = container.Height;
+                    _pz = container.Length;
                     break;
 
                 case 3:
-                    px = container.Width;
-                    py = container.Length;
-                    pz = container.Height;
+                    _px = container.Width;
+                    _py = container.Length;
+                    _pz = container.Height;
                     break;
 
                 case 4:
-                    px = container.Height;
-                    py = container.Length;
-                    pz = container.Width;
+                    _px = container.Height;
+                    _py = container.Length;
+                    _pz = container.Width;
                     break;
 
                 case 5:
-                    px = container.Length;
-                    py = container.Width;
-                    pz = container.Height;
+                    _px = container.Length;
+                    _py = container.Width;
+                    _pz = container.Height;
                     break;
 
                 case 6:
-                    px = container.Height;
-                    py = container.Width;
-                    pz = container.Length;
+                    _px = container.Height;
+                    _py = container.Width;
+                    _pz = container.Length;
                     break;
             }
 
-            layers = GetLayers();
-            packingBest = true;
-            packedVolume = packedy = 0;
-            packing = true;
-            layerThickness = layers[bestIteration].LayerDim;
-            remainpy = py;
-            remainpz = pz;
-            for (int i = 1; i <= itemsToPackCount; i++)
+            _layers = GetLayers();
+            _packingBest = true;
+            _packedVolume = _packedy = 0;
+            _packing = true;
+            _layerThickness = _layers[_bestIteration].LayerDim;
+            _remainpy = _py;
+            _remainpz = _pz;
+            for (int i = 1; i <= _itemsToPackCount; i++)
             {
-                itemsToPack[i].IsPacked = false;
+                _itemsToPack[i].IsPacked = false;
             }
 
-            sourceDictionaryItems = sourceItems.ToDictionary(i => i.ID, i => new Item(i));
+            _sourceDictionaryItems = _sourceItems.ToDictionary(i => i.ID, i => new Item(i));
             do
             {
-                layerInLayer = 0;
-                layerDone = false;
+                _layerInLayer = 0;
+                _layerDone = false;
                 PackLayer();
-                packedy += layerThickness;
-                remainpy = py - packedy;
-                if (layerInLayer != 0)
+                _packedy += _layerThickness;
+                _remainpy = _py - _packedy;
+                if (_layerInLayer != 0)
                 {
-                    prepackedy = packedy;
-                    preremainpy = remainpy;
-                    remainpy = layerThickness - prelayer;
-                    packedy = packedy - layerThickness + prelayer;
-                    remainpz = lilz;
-                    layerThickness = layerInLayer;
-                    layerDone = false;
+                    _prepackedy = _packedy;
+                    _preremainpy = _remainpy;
+                    _remainpy = _layerThickness - _prelayer;
+                    _packedy = _packedy - _layerThickness + _prelayer;
+                    _remainpz = _lilz;
+                    _layerThickness = _layerInLayer;
+                    _layerDone = false;
                     PackLayer();
-                    packedy = prepackedy;
-                    remainpy = preremainpy;
-                    remainpz = pz;
+                    _packedy = _prepackedy;
+                    _remainpy = _preremainpy;
+                    _remainpz = _pz;
                 }
 
-                FindLayer(remainpy);
-            } while (packing);
+                FindLayer(_remainpy);
+            } while (_packing);
         }
-
-        protected virtual bool SkipBoxBehind(int j) => false;
 
         private void CheckFound()
         {
-            evened = false;
-            if (boxi != 0)
+            _evened = false;
+            if (_boxi != 0)
             {
-                cboxi = boxi;
-                cboxx = boxx;
-                cboxy = boxy;
-                cboxz = boxz;
+                _cboxi = _boxi;
+                _cboxx = _boxx;
+                _cboxy = _boxy;
+                _cboxz = _boxz;
             }
             else
             {
-                if ((bboxi > 0) && (layerInLayer != 0 || (smallestZ.Pre == null && smallestZ.Post == null)))
+                if ((_bboxi > 0) && (_layerInLayer != 0 || (_smallestZ.Pre == null && _smallestZ.Post == null)))
                 {
-                    if (layerInLayer == 0)
+                    if (_layerInLayer == 0)
                     {
-                        prelayer = layerThickness;
-                        lilz = smallestZ.CumZ;
+                        _prelayer = _layerThickness;
+                        _lilz = _smallestZ.CumZ;
                     }
 
-                    cboxi = bboxi;
-                    cboxx = bboxx;
-                    cboxy = bboxy;
-                    cboxz = bboxz;
-                    layerInLayer = layerInLayer + bboxy - layerThickness;
-                    layerThickness = bboxy;
+                    _cboxi = _bboxi;
+                    _cboxx = _bboxx;
+                    _cboxy = _bboxy;
+                    _cboxz = _bboxz;
+                    _layerInLayer = _layerInLayer + _bboxy - _layerThickness;
+                    _layerThickness = _bboxy;
                 }
                 else
                 {
-                    if (smallestZ.Pre == null && smallestZ.Post == null)
+                    if (_smallestZ.Pre == null && _smallestZ.Post == null)
                     {
-                        layerDone = true;
+                        _layerDone = true;
                     }
                     else
                     {
-                        evened = true;
-                        if (smallestZ.Pre == null)
+                        _evened = true;
+                        if (_smallestZ.Pre == null)
                         {
-                            smallestZ.CumX = smallestZ.Post.CumX;
-                            smallestZ.CumZ = smallestZ.Post.CumZ;
-                            smallestZ.Post = smallestZ.Post.Post;
-                            smallestZ.Post?.Pre = smallestZ;
+                            _smallestZ.CumX = _smallestZ.Post.CumX;
+                            _smallestZ.CumZ = _smallestZ.Post.CumZ;
+                            _smallestZ.Post = _smallestZ.Post.Post;
+                            _smallestZ.Post?.Pre = _smallestZ;
                         }
-                        else if (smallestZ.Post == null)
+                        else if (_smallestZ.Post == null)
                         {
-                            smallestZ.Pre.Post = null;
-                            smallestZ.Pre.CumX = smallestZ.CumX;
+                            _smallestZ.Pre.Post = null;
+                            _smallestZ.Pre.CumX = _smallestZ.CumX;
                         }
                         else
                         {
-                            if (smallestZ.Pre.CumZ == smallestZ.Post.CumZ)
+                            if (_smallestZ.Pre.CumZ == _smallestZ.Post.CumZ)
                             {
-                                smallestZ.Pre.Post = smallestZ.Post.Post;
-                                smallestZ.Post.Post?.Pre = smallestZ.Pre;
+                                _smallestZ.Pre.Post = _smallestZ.Post.Post;
+                                _smallestZ.Post.Post?.Pre = _smallestZ.Pre;
 
-                                smallestZ.Pre.CumX = smallestZ.Post.CumX;
+                                _smallestZ.Pre.CumX = _smallestZ.Post.CumX;
                             }
                             else
                             {
-                                smallestZ.Pre.Post = smallestZ.Post;
-                                smallestZ.Post.Pre = smallestZ.Pre;
-                                if (smallestZ.Pre.CumZ < smallestZ.Post.CumZ)
+                                _smallestZ.Pre.Post = _smallestZ.Post;
+                                _smallestZ.Post.Pre = _smallestZ.Pre;
+                                if (_smallestZ.Pre.CumZ < _smallestZ.Post.CumZ)
                                 {
-                                    smallestZ.Pre.CumX = smallestZ.CumX;
+                                    _smallestZ.Pre.CumX = _smallestZ.CumX;
                                 }
                             }
                         }
@@ -715,60 +703,60 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
 
         private void FindBox(decimal hmx, decimal hz, decimal hmz)
         {
-            bfx = bfy = bfz = bbfx = bbfy = bbfz = 32767;
-            boxi = bboxi = 0;
+            _bfx = _bfy = _bfz = _bbfx = _bbfy = _bbfz = 32767;
+            _boxi = _bboxi = 0;
             int j;
-            for (int i = 1; i <= itemsToPackCount; i += itemsToPack[i].Quantity)
+            for (int i = 1; i <= _itemsToPackCount; i += _itemsToPack[i].Quantity)
             {
-                for (j = i; j < j + itemsToPack[i].Quantity - 1; j++)
+                for (j = i; j < j + _itemsToPack[i].Quantity - 1; j++)
                 {
-                    if (!itemsToPack[j].IsPacked)
+                    if (!_itemsToPack[j].IsPacked)
                     {
                         break;
                     }
                 }
 
-                if (itemsToPack[j].IsPacked)
+                if (_itemsToPack[j].IsPacked)
                 {
                     continue;
                 }
 
-                if (j > itemsToPackCount)
+                if (j > _itemsToPackCount)
                 {
                     return;
                 }
 
-                AnalyzeBoxOrientation(AnalyzeBox, itemsToPack[j]);
+                AnalyzeBoxOrientation(AnalyzeBox, _itemsToPack[j]);
             }
 
             void AnalyzeBox(decimal dim1, decimal dim2, decimal dim3)
             {
-                if (dim1 <= hmx && dim2 <= remainpy && dim3 <= hmz)
+                if (dim1 <= hmx && dim2 <= _remainpy && dim3 <= hmz)
                 {
-                    if (dim2 <= layerThickness)
+                    if (dim2 <= _layerThickness)
                     {
-                        if ((layerThickness - dim2 < bfy) || ((layerThickness - dim2 == bfy) && ((hmx - dim1 < bfx) || (hmx - dim1 == bfx && Math.Abs(hz - dim3) < bfz))))
+                        if ((_layerThickness - dim2 < _bfy) || ((_layerThickness - dim2 == _bfy) && ((hmx - dim1 < _bfx) || (hmx - dim1 == _bfx && Math.Abs(hz - dim3) < _bfz))))
                         {
-                            boxx = dim1;
-                            boxy = dim2;
-                            boxz = dim3;
-                            bfx = hmx - dim1;
-                            bfy = layerThickness - dim2;
-                            bfz = Math.Abs(hz - dim3);
-                            boxi = j;
+                            _boxx = dim1;
+                            _boxy = dim2;
+                            _boxz = dim3;
+                            _bfx = hmx - dim1;
+                            _bfy = _layerThickness - dim2;
+                            _bfz = Math.Abs(hz - dim3);
+                            _boxi = j;
                         }
                     }
                     else
                     {
-                        if ((dim2 - layerThickness < bbfy) || ((dim2 - layerThickness == bbfy) && ((hmx - dim1 < bbfx) || (hmx - dim1 == bbfx && Math.Abs(hz - dim3) < bbfz))))
+                        if ((dim2 - _layerThickness < _bbfy) || ((dim2 - _layerThickness == _bbfy) && ((hmx - dim1 < _bbfx) || (hmx - dim1 == _bbfx && Math.Abs(hz - dim3) < _bbfz))))
                         {
-                            bboxx = dim1;
-                            bboxy = dim2;
-                            bboxz = dim3;
-                            bbfx = hmx - dim1;
-                            bbfy = dim2 - layerThickness;
-                            bbfz = Math.Abs(hz - dim3);
-                            bboxi = j;
+                            _bboxx = dim1;
+                            _bboxy = dim2;
+                            _bboxz = dim3;
+                            _bbfx = hmx - dim1;
+                            _bbfy = dim2 - _layerThickness;
+                            _bbfz = Math.Abs(hz - dim3);
+                            _bboxi = j;
                         }
                     }
                 }
@@ -781,8 +769,8 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
             decimal dimen2 = 0;
             decimal dimen3 = 0;
             decimal eval = 1000000;
-            layerThickness = 0;
-            List<Item> items = sourceDictionaryItems.Values.Where(i => i.Quantity > 0).ToList();
+            _layerThickness = 0;
+            List<Item> items = _sourceDictionaryItems.Values.Where(i => i.Quantity > 0).ToList();
             for (int i = 0; i < items.Count; i++)
             {
                 for (int d = 1; d <= 3; d++)
@@ -809,7 +797,7 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
                     }
 
                     decimal layerEval = 0;
-                    if ((exDim <= thickness) && (((dimen2 <= px) && (dimen3 <= pz)) || ((dimen3 <= px) && (dimen2 <= pz))))
+                    if ((exDim <= thickness) && (((dimen2 <= _px) && (dimen3 <= _pz)) || ((dimen3 <= _px) && (dimen2 <= _pz))))
                     {
                         for (int j = i + 1; j < items.Count; j++)
                         {
@@ -819,15 +807,15 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
                         if (eval > layerEval)
                         {
                             eval = layerEval;
-                            layerThickness = exDim;
+                            _layerThickness = exDim;
                         }
                     }
                 }
             }
 
-            if (layerThickness == 0 || layerThickness > remainpy)
+            if (_layerThickness == 0 || _layerThickness > _remainpy)
             {
-                packing = false;
+                _packing = false;
             }
         }
 
@@ -837,32 +825,32 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
             decimal exDim = 0;
             decimal dimen2 = 0;
             decimal dimen3 = 0;
-            for (int i = 0; i < sourceItems.Count; i++)
+            for (int i = 0; i < _sourceItems.Count; i++)
             {
                 for (int d = 1; d <= 3; d++)
                 {
                     switch (d)
                     {
                         case 1:
-                            exDim = sourceItems[i].Dim1;
-                            dimen2 = sourceItems[i].Dim2;
-                            dimen3 = sourceItems[i].Dim3;
+                            exDim = _sourceItems[i].Dim1;
+                            dimen2 = _sourceItems[i].Dim2;
+                            dimen3 = _sourceItems[i].Dim3;
                             break;
 
                         case 2:
-                            exDim = sourceItems[i].Dim2;
-                            dimen2 = sourceItems[i].Dim1;
-                            dimen3 = sourceItems[i].Dim3;
+                            exDim = _sourceItems[i].Dim2;
+                            dimen2 = _sourceItems[i].Dim1;
+                            dimen3 = _sourceItems[i].Dim3;
                             break;
 
                         case 3:
-                            exDim = sourceItems[i].Dim3;
-                            dimen2 = sourceItems[i].Dim1;
-                            dimen3 = sourceItems[i].Dim2;
+                            exDim = _sourceItems[i].Dim3;
+                            dimen2 = _sourceItems[i].Dim1;
+                            dimen3 = _sourceItems[i].Dim2;
                             break;
                     }
 
-                    if ((exDim > py) || (((dimen2 > px) || (dimen3 > pz)) && ((dimen3 > px) || (dimen2 > pz))))
+                    if ((exDim > _py) || (((dimen2 > _px) || (dimen3 > _pz)) && ((dimen3 > _px) || (dimen2 > _pz))))
                     {
                         continue;
                     }
@@ -873,9 +861,9 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
                     }
 
                     decimal layerEval = 0;
-                    for (int j = i + 1; j < sourceItems.Count; j++)
+                    for (int j = i + 1; j < _sourceItems.Count; j++)
                     {
-                        layerEval += sourceItems[j].GetDimDif(exDim);
+                        layerEval += _sourceItems[j].GetDimDif(exDim);
                     }
 
                     newLayers.Add(new Layer(exDim, layerEval));
@@ -887,18 +875,18 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
 
         private void Initialize()
         {
-            foreach (Item itemData in sourceItems)
+            foreach (Item itemData in _sourceItems)
             {
                 for (int i = 1; i <= itemData.Quantity; i++)
                 {
-                    itemsToPack.Add(new Item(itemData));
+                    _itemsToPack.Add(new Item(itemData));
                 }
 
-                totalItemsVolume += itemData.TotalVolume;
-                itemsToPackCount += itemData.Quantity;
+                _totalItemsVolume += itemData.TotalVolume;
+                _itemsToPackCount += itemData.Quantity;
             }
 
-            itemsToPack.Add(new Item());
+            _itemsToPack.Add(new Item());
         }
 
         private void OutputBoxList(int cboxi)
@@ -909,113 +897,113 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
             decimal packDimX = 0;
             decimal packDimY = 0;
             decimal packDimZ = 0;
-            switch (bestVariant)
+            switch (_bestVariant)
             {
                 case 1:
-                    packCoordX = itemsToPack[cboxi].CoordX;
-                    packCoordY = itemsToPack[cboxi].CoordY;
-                    packCoordZ = itemsToPack[cboxi].CoordZ;
-                    packDimX = itemsToPack[cboxi].PackDimX;
-                    packDimY = itemsToPack[cboxi].PackDimY;
-                    packDimZ = itemsToPack[cboxi].PackDimZ;
+                    packCoordX = _itemsToPack[cboxi].CoordX;
+                    packCoordY = _itemsToPack[cboxi].CoordY;
+                    packCoordZ = _itemsToPack[cboxi].CoordZ;
+                    packDimX = _itemsToPack[cboxi].PackDimX;
+                    packDimY = _itemsToPack[cboxi].PackDimY;
+                    packDimZ = _itemsToPack[cboxi].PackDimZ;
                     break;
 
                 case 2:
-                    packCoordX = itemsToPack[cboxi].CoordZ;
-                    packCoordY = itemsToPack[cboxi].CoordY;
-                    packCoordZ = itemsToPack[cboxi].CoordX;
-                    packDimX = itemsToPack[cboxi].PackDimZ;
-                    packDimY = itemsToPack[cboxi].PackDimY;
-                    packDimZ = itemsToPack[cboxi].PackDimX;
+                    packCoordX = _itemsToPack[cboxi].CoordZ;
+                    packCoordY = _itemsToPack[cboxi].CoordY;
+                    packCoordZ = _itemsToPack[cboxi].CoordX;
+                    packDimX = _itemsToPack[cboxi].PackDimZ;
+                    packDimY = _itemsToPack[cboxi].PackDimY;
+                    packDimZ = _itemsToPack[cboxi].PackDimX;
                     break;
 
                 case 3:
-                    packCoordX = itemsToPack[cboxi].CoordY;
-                    packCoordY = itemsToPack[cboxi].CoordZ;
-                    packCoordZ = itemsToPack[cboxi].CoordX;
-                    packDimX = itemsToPack[cboxi].PackDimY;
-                    packDimY = itemsToPack[cboxi].PackDimZ;
-                    packDimZ = itemsToPack[cboxi].PackDimX;
+                    packCoordX = _itemsToPack[cboxi].CoordY;
+                    packCoordY = _itemsToPack[cboxi].CoordZ;
+                    packCoordZ = _itemsToPack[cboxi].CoordX;
+                    packDimX = _itemsToPack[cboxi].PackDimY;
+                    packDimY = _itemsToPack[cboxi].PackDimZ;
+                    packDimZ = _itemsToPack[cboxi].PackDimX;
                     break;
 
                 case 4:
-                    packCoordX = itemsToPack[cboxi].CoordY;
-                    packCoordY = itemsToPack[cboxi].CoordX;
-                    packCoordZ = itemsToPack[cboxi].CoordZ;
-                    packDimX = itemsToPack[cboxi].PackDimY;
-                    packDimY = itemsToPack[cboxi].PackDimX;
-                    packDimZ = itemsToPack[cboxi].PackDimZ;
+                    packCoordX = _itemsToPack[cboxi].CoordY;
+                    packCoordY = _itemsToPack[cboxi].CoordX;
+                    packCoordZ = _itemsToPack[cboxi].CoordZ;
+                    packDimX = _itemsToPack[cboxi].PackDimY;
+                    packDimY = _itemsToPack[cboxi].PackDimX;
+                    packDimZ = _itemsToPack[cboxi].PackDimZ;
                     break;
 
                 case 5:
-                    packCoordX = itemsToPack[cboxi].CoordX;
-                    packCoordY = itemsToPack[cboxi].CoordZ;
-                    packCoordZ = itemsToPack[cboxi].CoordY;
-                    packDimX = itemsToPack[cboxi].PackDimX;
-                    packDimY = itemsToPack[cboxi].PackDimZ;
-                    packDimZ = itemsToPack[cboxi].PackDimY;
+                    packCoordX = _itemsToPack[cboxi].CoordX;
+                    packCoordY = _itemsToPack[cboxi].CoordZ;
+                    packCoordZ = _itemsToPack[cboxi].CoordY;
+                    packDimX = _itemsToPack[cboxi].PackDimX;
+                    packDimY = _itemsToPack[cboxi].PackDimZ;
+                    packDimZ = _itemsToPack[cboxi].PackDimY;
                     break;
 
                 case 6:
-                    packCoordX = itemsToPack[cboxi].CoordZ;
-                    packCoordY = itemsToPack[cboxi].CoordX;
-                    packCoordZ = itemsToPack[cboxi].CoordY;
-                    packDimX = itemsToPack[cboxi].PackDimZ;
-                    packDimY = itemsToPack[cboxi].PackDimX;
-                    packDimZ = itemsToPack[cboxi].PackDimY;
+                    packCoordX = _itemsToPack[cboxi].CoordZ;
+                    packCoordY = _itemsToPack[cboxi].CoordX;
+                    packCoordZ = _itemsToPack[cboxi].CoordY;
+                    packDimX = _itemsToPack[cboxi].PackDimZ;
+                    packDimY = _itemsToPack[cboxi].PackDimX;
+                    packDimZ = _itemsToPack[cboxi].PackDimY;
                     break;
             }
 
-            itemsToPack[cboxi].CoordX = packCoordX;
-            itemsToPack[cboxi].CoordY = packCoordY;
-            itemsToPack[cboxi].CoordZ = packCoordZ;
-            itemsToPack[cboxi].PackDimX = packDimX;
-            itemsToPack[cboxi].PackDimY = packDimY;
-            itemsToPack[cboxi].PackDimZ = packDimZ;
-            itemsPackedInOrder.Add(itemsToPack[cboxi]);
+            _itemsToPack[cboxi].CoordX = packCoordX;
+            _itemsToPack[cboxi].CoordY = packCoordY;
+            _itemsToPack[cboxi].CoordZ = packCoordZ;
+            _itemsToPack[cboxi].PackDimX = packDimX;
+            _itemsToPack[cboxi].PackDimY = packDimY;
+            _itemsToPack[cboxi].PackDimZ = packDimZ;
+            _itemsPackedInOrder.Add(_itemsToPack[cboxi]);
         }
 
         private void PackBehindBox()
         {
-            decimal coordX = itemsToPack[cboxi].CoordX;
-            decimal coordY = itemsToPack[cboxi].CoordY + itemsToPack[cboxi].PackDimY;
-            decimal coordZ = itemsToPack[cboxi].CoordZ;
-            decimal remain_Y = layerThickness - cboxy;
+            decimal coordX = _itemsToPack[_cboxi].CoordX;
+            decimal coordY = _itemsToPack[_cboxi].CoordY + _itemsToPack[_cboxi].PackDimY;
+            decimal coordZ = _itemsToPack[_cboxi].CoordZ;
+            decimal remain_Y = _layerThickness - _cboxy;
             if (remain_Y == 0)
             {
                 return;
             }
 
             int boxi;
-            List<Item> tempList = sourceDictionaryItems.Values.Where(i => i.Quantity > 0).ToList();
+            List<Item> tempList = _sourceDictionaryItems.Values.Where(i => i.Quantity > 0).ToList();
             if (tempList.Count == 0)
             {
                 return;
             }
 
             decimal minDim = tempList.Min(i => i.GetMinDim());
-            if (minDim <= remain_Y && minDim <= cboxx && minDim <= cboxz)
+            if (minDim <= remain_Y && minDim <= _cboxx && minDim <= _cboxz)
             {
                 while (remain_Y != 0)
                 {
                     boxi = 0;
-                    remain_Y = FindBoxBehind(cboxx, remain_Y, cboxz);
+                    remain_Y = FindBoxBehind(_cboxx, remain_Y, _cboxz);
                     if (boxi == 0)
                     {
                         break;
                     }
 
-                    sourceDictionaryItems[itemsToPack[boxi].ID].Quantity--;
-                    itemsToPack[boxi].IsPacked = true;
-                    itemsToPack[boxi].PackDimX = boxx;
-                    itemsToPack[boxi].PackDimY = boxy;
-                    itemsToPack[boxi].PackDimZ = boxz;
-                    itemsToPack[boxi].CoordX = coordX;
-                    itemsToPack[boxi].CoordY = coordY;
-                    itemsToPack[boxi].CoordZ = coordZ;
-                    coordY = itemsToPack[boxi].CoordY + itemsToPack[boxi].PackDimY;
-                    packedVolume += itemsToPack[boxi].Volume;
-                    if (packingBest)
+                    _sourceDictionaryItems[_itemsToPack[boxi].ID].Quantity--;
+                    _itemsToPack[boxi].IsPacked = true;
+                    _itemsToPack[boxi].PackDimX = _boxx;
+                    _itemsToPack[boxi].PackDimY = _boxy;
+                    _itemsToPack[boxi].PackDimZ = _boxz;
+                    _itemsToPack[boxi].CoordX = coordX;
+                    _itemsToPack[boxi].CoordY = coordY;
+                    _itemsToPack[boxi].CoordZ = coordZ;
+                    coordY = _itemsToPack[boxi].CoordY + _itemsToPack[boxi].PackDimY;
+                    _packedVolume += _itemsToPack[boxi].Volume;
+                    if (_packingBest)
                     {
                         OutputBoxList(boxi);
                     }
@@ -1025,44 +1013,44 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
             decimal FindBoxBehind(decimal hm_X, decimal hm_Y, decimal hm_Z)
             {
                 int j;
-                bfx = bfy = bfz = 32767;
-                for (int i = 1; i <= itemsToPackCount; i += itemsToPack[i].Quantity)
+                _bfx = _bfy = _bfz = 32767;
+                for (int i = 1; i <= _itemsToPackCount; i += _itemsToPack[i].Quantity)
                 {
-                    for (j = i; j < j + itemsToPack[i].Quantity - 1; j++)
+                    for (j = i; j < j + _itemsToPack[i].Quantity - 1; j++)
                     {
-                        if (!itemsToPack[j].IsPacked)
+                        if (!_itemsToPack[j].IsPacked)
                         {
                             break;
                         }
                     }
 
-                    if (itemsToPack[j].IsPacked || SkipBoxBehind(j))
+                    if (_itemsToPack[j].IsPacked)
                     {
                         continue;
                     }
 
-                    if (j > itemsToPackCount)
+                    if (j > _itemsToPackCount)
                     {
-                        return bfy;
+                        return _bfy;
                     }
 
-                    AnalyzeBoxOrientation(AnalyzeBox, itemsToPack[j]);
+                    AnalyzeBoxOrientation(AnalyzeBox, _itemsToPack[j]);
                 }
 
-                return bfy;
+                return _bfy;
 
                 void AnalyzeBox(decimal dim1, decimal dim2, decimal dim3)
                 {
                     if (dim1 <= hm_X && dim2 <= hm_Y && dim3 <= hm_Z)
                     {
-                        if (hm_Y - dim2 < bfy || (hm_Y - dim2 == bfy && (hm_X - dim1 < bfx || (hm_X - dim1 == bfx && hm_Z - dim3 < bfz))))
+                        if (hm_Y - dim2 < _bfy || (hm_Y - dim2 == _bfy && (hm_X - dim1 < _bfx || (hm_X - dim1 == _bfx && hm_Z - dim3 < _bfz))))
                         {
-                            boxx = dim1;
-                            boxy = dim2;
-                            boxz = dim3;
-                            bfx = hm_X - dim1;
-                            bfy = hm_Y - dim2;
-                            bfz = hm_Z - dim3;
+                            _boxx = dim1;
+                            _boxy = dim2;
+                            _boxz = dim3;
+                            _bfx = hm_X - dim1;
+                            _bfy = hm_Y - dim2;
+                            _bfz = hm_Z - dim3;
                             boxi = j;
                         }
                     }

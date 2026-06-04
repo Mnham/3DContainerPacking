@@ -129,18 +129,18 @@ function createContainerFrame(container) {
     return wireframe;
 }
 
-function showPackingView(containerIndex, resultIndex) {
+function showPackingView(containerIndex) {
     ensureDrawingInitialized();
 
     const container = state.containers[containerIndex];
-    const algorithmPackingResult = container.AlgorithmPackingResults[resultIndex];
+    const packingResult = container.PackingResult;
 
     clearPackingScene();
 
     camera.position.set(container.Length, container.Length, container.Length);
     controls.update();
 
-    viewerState.itemsToRender = algorithmPackingResult.PackedItems ?? [];
+    viewerState.itemsToRender = packingResult.PackedItems ?? [];
     viewerState.lastItemRenderedIndex = -1;
     viewerState.containerOriginOffset.x = -1 * container.Length / 2;
     viewerState.containerOriginOffset.y = -1 * container.Height / 2;
@@ -152,8 +152,8 @@ function showPackingView(containerIndex, resultIndex) {
     resizeDrawing();
 }
 
-export function openPackingView(containerIndex, resultIndex) {
-    viewerState.selectedPackingView = { containerIndex, resultIndex };
+export function openPackingView(containerIndex) {
+    viewerState.selectedPackingView = { containerIndex };
     elements.drawingContainer.style.visibility = 'hidden';
     elements.packRenderItemButton.disabled = true;
     elements.unpackRenderItemButton.disabled = true;
@@ -166,8 +166,8 @@ export async function renderSelectedPackingView() {
         return;
     }
 
-    const { containerIndex, resultIndex } = viewerState.selectedPackingView;
-    showPackingView(containerIndex, resultIndex);
+    const { containerIndex } = viewerState.selectedPackingView;
+    showPackingView(containerIndex);
 
     await new Promise(resolve => requestAnimationFrame(resolve));
     resizeDrawing();

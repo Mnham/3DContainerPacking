@@ -5,12 +5,6 @@ namespace CromulentBisgetti.ContainerPacking.Entities
     [DataContract]
     public sealed class AlgorithmPackingResult
     {
-        [DataMember]
-        public int AlgorithmID { get; set; }
-
-        [DataMember]
-        public string AlgorithmName { get; set; }
-
         /// <summary>
         /// Gets or sets a value indicating whether all of the items are packed in the container.
         /// </summary>

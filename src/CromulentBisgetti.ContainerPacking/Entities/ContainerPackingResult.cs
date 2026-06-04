@@ -9,7 +9,7 @@ namespace CromulentBisgetti.ContainerPacking.Entities
     public sealed class ContainerPackingResult
     {
         [DataMember]
-        public List<AlgorithmPackingResult> AlgorithmPackingResults { get; set; } = new List<AlgorithmPackingResult>();
+        public AlgorithmPackingResult PackingResult { get; set; } = new AlgorithmPackingResult();
 
         /// <summary>
         /// Gets or sets the container ID.

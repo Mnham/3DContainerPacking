@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ru">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Упаковка контейнеров</title>
+    <base href="/" />
+    <link rel="preload" id="webassembly" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230d6efd'/%3E%3Cpath d='M4 5.2 8 3l4 2.2v5.6L8 13l-4-2.2z' fill='white'/%3E%3Cpath d='M8 3v4.4m0 5.6V7.4m4-2.2L8 7.4 4 5.2' stroke='%230d6efd' stroke-width='.7' fill='none'/%3E%3C/svg%3E" />
+    <link href="lib/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="css/container-packing.css" rel="stylesheet" />
+    <link href="css/app.css" rel="stylesheet" />
+    <script type="importmap"></script>
+</head>
+
+<body>
+    <div id="app">
+        <svg class="loading-progress">
+            <circle r="40%" cx="50%" cy="50%" />
+            <circle r="40%" cx="50%" cy="50%" />
+        </svg>
+        <div class="loading-progress-text"></div>
+    </div>
+
+    <div id="blazor-error-ui">
+        Произошла непредвиденная ошибка.
+        <a href="." class="reload">Обновить</a>
+        <span class="dismiss">x</span>
+    </div>
+
+    <script src="lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
+</body>
+
+</html>
