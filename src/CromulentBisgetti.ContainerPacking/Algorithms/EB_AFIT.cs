@@ -1,8 +1,7 @@
-﻿using CromulentBisgetti.ContainerPacking.Entities;
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using CromulentBisgetti.ContainerPacking.Entities;
 
 namespace CromulentBisgetti.ContainerPacking.Algorithms
 {
@@ -36,7 +35,7 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
         private decimal cboxy;
         private decimal cboxz;
         private bool evened;
-        private bool hundredPercentPacked = false;
+        private bool hundredPercentPacked ;
         private List<Item> itemsPackedInOrder;
         private List<Item> itemsToPack;
         private decimal itemsToPackCount;
@@ -49,14 +48,14 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
         private decimal packedVolume;
         private decimal packedy;
         private bool packing;
-        private bool packingBest = false;
+        private bool packingBest ;
         private decimal prelayer;
         private decimal prepackedy;
         private decimal preremainpy;
         private decimal px;
         private decimal py;
         private decimal pz;
-        private bool quit = false;
+        private bool quit ;
         private decimal remainpy;
         private decimal remainpz;
         private ScrapPad scrapfirst;
@@ -81,7 +80,7 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
             ExecuteIterations(container);
             Report(container);
 
-            AlgorithmPackingResult result = new AlgorithmPackingResult
+            var result = new AlgorithmPackingResult
             {
                 AlgorithmID = (int)AlgorithmType.EB_AFIT,
                 AlgorithmName = nameof(EB_AFIT)
@@ -501,7 +500,7 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
                     {
                         for (z = 1; z <= itemsToPackCount; z++)
                         {
-                            if (!(x == z) && !(itemsToPack[z].IsPacked))
+                            if (x != z && !itemsToPack[z].IsPacked)
                             {
                                 dimdif = Math.Abs(exdim - itemsToPack[z].Dim1);
 
@@ -568,11 +567,11 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
             layers = new List<Layer>();
             itemsToPackCount = 0;
 
-            foreach (Item item in items)
+            foreach (var item in items)
             {
                 for (int i = 1; i <= item.Quantity; i++)
                 {
-                    Item newItem = new Item(item.ID, item.Dim1, item.Dim2, item.Dim3, item.Quantity);
+                    var newItem = new Item(item.ID, item.Dim1, item.Dim2, item.Dim3, item.Quantity);
                     itemsToPack.Add(newItem);
                 }
 
@@ -649,7 +648,6 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
                         if (exdim == layers[k].LayerDim)
                         {
                             same = true;
-                            continue;
                         }
                     }
 
@@ -662,7 +660,7 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
 
                     for (z = 1; z <= itemsToPackCount; z++)
                     {
-                        if (!(x == z))
+                        if (x != z)
                         {
                             dimdif = Math.Abs(exdim - itemsToPack[z].Dim1);
 
@@ -932,7 +930,7 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
                     {
                         if (smallestZ.CumZ + cboxz == smallestZ.Pre.CumZ)
                         {
-                            smallestZ.Pre.CumX = smallestZ.Pre.CumX + cboxx;
+                            smallestZ.Pre.CumX += cboxx;
                         }
                         else
                         {
@@ -1021,7 +1019,7 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
                     {
                         if (smallestZ.CumZ + cboxz == smallestZ.Pre.CumZ)
                         {
-                            smallestZ.Pre.CumX = smallestZ.Pre.CumX + cboxx;
+                            smallestZ.Pre.CumX += cboxx;
                             itemsToPack[cboxi].CoordX = smallestZ.Pre.CumX;
                         }
                         else
@@ -1081,7 +1079,7 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
                     {
                         if ((smallestZ.CumZ + cboxz) == smallestZ.Pre.CumZ)
                         {
-                            smallestZ.Pre.CumX = smallestZ.Pre.CumX + cboxx;
+                            smallestZ.Pre.CumX += cboxx;
                         }
                         else if (smallestZ.CumZ + cboxz == smallestZ.Post.CumZ)
                         {

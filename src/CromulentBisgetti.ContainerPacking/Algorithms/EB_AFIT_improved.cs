@@ -1,8 +1,7 @@
-﻿using CromulentBisgetti.ContainerPacking.Entities;
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using CromulentBisgetti.ContainerPacking.Entities;
 
 namespace CromulentBisgetti.ContainerPacking.Algorithms
 {
@@ -10,8 +9,10 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
     {
         #region Protected Fields
 
-        protected readonly List<Item> itemsToPack = new List<Item>() { new Item() };
-        protected int bboxi, boxi, cboxi;
+        protected readonly List<Item> itemsToPack = new List<Item> { new Item() };
+        protected int bboxi;
+        protected int boxi;
+        protected int cboxi;
         protected int bestVariant;
         protected int containerOrientation;
         protected bool hundredPercentPacked;
@@ -21,8 +22,11 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
         protected decimal packedVolume;
         protected decimal packedy;
         protected bool packingBest;
-        protected decimal px, py, pz;
-        protected decimal remainpy, remainpz;
+        protected decimal px;
+        protected decimal py;
+        protected decimal pz;
+        protected decimal remainpy;
+        protected decimal remainpz;
         protected Dictionary<int, Item> sourceDictionaryItems;
         protected List<Item> sourceItems;
 
@@ -32,12 +36,22 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
 
         private readonly List<Item> itemsPackedInOrder = new List<Item>();
         private readonly ScrapPad scrapfirst = new ScrapPad();
-        private decimal bbfx, bbfy, bbfz;
-        private decimal bboxx, bboxy, bboxz;
+        private decimal bbfx;
+        private decimal bbfy;
+        private decimal bbfz;
+        private decimal bboxx;
+        private decimal bboxy;
+        private decimal bboxz;
         private int bestIteration;
-        private decimal bfx, bfy, bfz;
-        private decimal boxx, boxy, boxz;
-        private decimal cboxx, cboxy, cboxz;
+        private decimal bfx;
+        private decimal bfy;
+        private decimal bfz;
+        private decimal boxx;
+        private decimal boxy;
+        private decimal boxz;
+        private decimal cboxx;
+        private decimal cboxy;
+        private decimal cboxz;
         private decimal containerVolume;
         private bool evened;
         private decimal layerInLayer;
@@ -72,7 +86,7 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
             Initialize();
             ExecuteIterations(container);
             Report(container);
-            AlgorithmPackingResult result = new AlgorithmPackingResult
+            var result = new AlgorithmPackingResult
             {
                 AlgorithmID = (int)AlgorithmType,
                 AlgorithmName = AlgorithmType.ToString(),
@@ -223,7 +237,9 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
 
         protected void PackLayer()
         {
-            decimal len_X, len_Z, lp_Z;
+            decimal len_X;
+            decimal len_Z;
+            decimal lp_Z;
             if (layerThickness == 0)
             {
                 packing = false;
@@ -369,7 +385,7 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
                     {
                         if (smallestZ.CumZ + cboxz == smallestZ.Pre.CumZ)
                         {
-                            smallestZ.Pre.CumX = smallestZ.Pre.CumX + cboxx;
+                            smallestZ.Pre.CumX += cboxx;
                         }
                         else
                         {
@@ -450,7 +466,7 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
                     {
                         if (smallestZ.CumZ + cboxz == smallestZ.Pre.CumZ)
                         {
-                            smallestZ.Pre.CumX = smallestZ.Pre.CumX + cboxx;
+                            smallestZ.Pre.CumX += cboxx;
                             itemsToPack[cboxi].CoordX = smallestZ.Pre.CumX;
                         }
                         else
@@ -506,7 +522,7 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
                     {
                         if ((smallestZ.CumZ + cboxz) == smallestZ.Pre.CumZ)
                         {
-                            smallestZ.Pre.CumX = smallestZ.Pre.CumX + cboxx;
+                            smallestZ.Pre.CumX += cboxx;
                         }
                         else if (smallestZ.CumZ + cboxz == smallestZ.Post.CumZ)
                         {
@@ -795,7 +811,10 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
 
         private void FindLayer(decimal thickness)
         {
-            decimal exDim = 0, dimen2 = 0, dimen3 = 0, eval = 1000000;
+            decimal exDim = 0;
+            decimal dimen2 = 0;
+            decimal dimen3 = 0;
+            decimal eval = 1000000;
             layerThickness = 0;
             List<Item> items = sourceDictionaryItems.Values.Where(i => i.Quantity > 0).ToList();
             for (int i = 0; i < items.Count; i++)
@@ -848,8 +867,10 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
 
         private List<Layer> GetLayers()
         {
-            List<Layer> newLayers = new List<Layer> { new Layer(0, -1) };
-            decimal exDim = 0, dimen2 = 0, dimen3 = 0;
+            var newLayers = new List<Layer> { new Layer(0, -1) };
+            decimal exDim = 0;
+            decimal dimen2 = 0;
+            decimal dimen3 = 0;
             for (int i = 0; i < sourceItems.Count; i++)
             {
                 for (int d = 1; d <= 3; d++)
@@ -900,7 +921,7 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
 
         private void Initialize()
         {
-            foreach (Item itemData in sourceItems)
+            foreach (var itemData in sourceItems)
             {
                 for (int i = 1; i <= itemData.Quantity; i++)
                 {
@@ -1009,13 +1030,8 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
             decimal minDim = tempList.Min(i => i.GetMinDim());
             if (minDim <= remain_Y && minDim <= cboxx && minDim <= cboxz)
             {
-                while (true)
+                while (remain_Y != 0)
                 {
-                    if (remain_Y == 0)
-                    {
-                        break;
-                    }
-
                     boxi = 0;
                     remain_Y = FindBoxBehind(cboxx, remain_Y, cboxz);
                     if (boxi == 0)
